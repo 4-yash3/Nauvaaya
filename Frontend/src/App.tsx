@@ -5,69 +5,33 @@ import {
   User, 
   ChevronDown, 
   ArrowRight, 
-  ArrowLeft,
+  ArrowLeft, 
   ChevronLeft, 
   ChevronRight, 
   Heart, 
   X, 
   Plus, 
-  Minus,
-  Sparkles,
-  ShieldCheck,
-  ArrowDown,
-  Check,
-  SlidersHorizontal,
-  RotateCcw,
-  Star,
-  Ruler,
-  Truck,
-  RefreshCw,
-  Play
+  Minus, 
+  Sparkles, 
+  ShieldCheck, 
+  ArrowDown, 
+  Check, 
+  SlidersHorizontal, 
+  RotateCcw, 
+  Star, 
+  Ruler, 
+  Truck, 
+  RefreshCw, 
+  Play 
 } from 'lucide-react';
-
-interface MediaItem {
-  id?: string;
-  image_url: string;
-  alt_text?: string;
-  is_primary?: boolean;
-  display_order?: number;
-  media_type?: 'image' | 'video';
-}
-
-interface Variant {
-  id: string;
-  size: string;
-  sku: string;
-  stock_quantity: number;
-}
-
-interface Product {
-  id: string;
-  name: string;
-  slug: string;
-  price: number;
-  primary_image_url?: string;
-  gallery_urls?: string[];
-  media?: MediaItem[];
-  available_sizes: string[];
-  variants?: Variant[];
-  in_stock: boolean;
-  category?: string;
-  colors?: string[];
-  tag?: string;
-  description?: string;
-  fabric?: string;
-  artisan_technique?: string;
-}
-
-interface CartItem {
-  id: string;
-  name: string;
-  price: number;
-  size: string;
-  quantity: number;
-  image: string;
-}
+import type { 
+  MediaItem, 
+  Variant, 
+  Product, 
+  CartItem, 
+  OrderConfirmation 
+} from './types';
+import { CheckoutModal } from './components/CheckoutModal';
 
 // Curated artisan metadata mapping for the database products
 const PRODUCT_METADATA: Record<string, Partial<Product>> = {
@@ -108,7 +72,7 @@ const PRODUCT_METADATA: Record<string, Partial<Product>> = {
   }
 };
 
-// Default products populated with local backend static files
+// Default products populated with local backend static files and database variants
 const MOCK_PRODUCTS: Product[] = [
   {
     id: 'f8896d77-2604-4066-b76d-aac9d9e2bd74',
@@ -127,6 +91,11 @@ const MOCK_PRODUCTS: Product[] = [
       { image_url: 'http://127.0.0.1:8000/static/products/sun-and-script/2.png', media_type: 'image' },
       { image_url: 'http://127.0.0.1:8000/static/products/sun-and-script/3.png', media_type: 'image' },
       { image_url: 'http://127.0.0.1:8000/static/products/sun-and-script/4.png', media_type: 'image' }
+    ],
+    variants: [
+      { id: 'fda95c1c-263b-48fe-add7-c92662421133', size: 'S', sku: 'SAS-S', stock_quantity: 15 },
+      { id: '6811efc8-4448-4804-a16c-469710c5e8b5', size: 'M', sku: 'SAS-M', stock_quantity: 20 },
+      { id: '32979fbf-d035-4706-b946-de6269da8ae2', size: 'L', sku: 'SAS-L', stock_quantity: 10 }
     ],
     available_sizes: ['S', 'M', 'L'],
     in_stock: true,
@@ -157,6 +126,11 @@ const MOCK_PRODUCTS: Product[] = [
       { image_url: 'http://127.0.0.1:8000/static/products/paper-and-poppy/4.png', media_type: 'image' },
       { image_url: 'http://127.0.0.1:8000/static/products/paper-and-poppy/video.mp4', media_type: 'video' }
     ],
+    variants: [
+      { id: '96e32176-c07a-4654-85b0-49c2137af444', size: 'S', sku: 'PAP-S', stock_quantity: 15 },
+      { id: '3a8304cc-4d4b-4390-8039-a34361d15082', size: 'M', sku: 'PAP-M', stock_quantity: 20 },
+      { id: '4ba7a94b-9b19-43cc-b10b-f275083aad25', size: 'L', sku: 'PAP-L', stock_quantity: 8 }
+    ],
     available_sizes: ['S', 'M', 'L'],
     in_stock: true,
     category: 'Shirts',
@@ -185,6 +159,11 @@ const MOCK_PRODUCTS: Product[] = [
       { image_url: 'http://127.0.0.1:8000/static/products/the-back-story-edit/3.png', media_type: 'image' },
       { image_url: 'http://127.0.0.1:8000/static/products/the-back-story-edit/4.png', media_type: 'image' },
       { image_url: 'http://127.0.0.1:8000/static/products/the-back-story-edit/video.mp4', media_type: 'video' }
+    ],
+    variants: [
+      { id: '511f553f-c373-41f1-845c-4062910c645f', size: 'S', sku: 'BSE-S', stock_quantity: 12 },
+      { id: '4bf765a8-1224-4bb3-9a40-2234f12e731c', size: 'M', sku: 'BSE-M', stock_quantity: 18 },
+      { id: '71581565-6d8b-4248-b7d5-b1da787f6002', size: 'L', sku: 'BSE-L', stock_quantity: 8 }
     ],
     available_sizes: ['S', 'M', 'L'],
     in_stock: true,
@@ -215,6 +194,11 @@ const MOCK_PRODUCTS: Product[] = [
       { image_url: 'http://127.0.0.1:8000/static/products/the-statement-spine/4.png', media_type: 'image' },
       { image_url: 'http://127.0.0.1:8000/static/products/the-statement-spine/video.mp4', media_type: 'video' }
     ],
+    variants: [
+      { id: '49eb6c21-6452-45e3-8dcd-2d0792a7d1b4', size: 'S', sku: 'TSS-S', stock_quantity: 10 },
+      { id: 'df74a06b-db68-493a-8808-b5ddbc9ea328', size: 'M', sku: 'TSS-M', stock_quantity: 15 },
+      { id: '1fe50610-67c1-4a67-81cd-4872ca9d5cb0', size: 'L', sku: 'TSS-L', stock_quantity: 12 }
+    ],
     available_sizes: ['S', 'M', 'L'],
     in_stock: true,
     category: 'Statement Shirts',
@@ -241,6 +225,11 @@ const MOCK_PRODUCTS: Product[] = [
       { image_url: 'http://127.0.0.1:8000/static/products/threaded-banter/2.png', media_type: 'image' },
       { image_url: 'http://127.0.0.1:8000/static/products/threaded-banter/3.png', media_type: 'image' },
       { image_url: 'http://127.0.0.1:8000/static/products/threaded-banter/4.png', media_type: 'image' }
+    ],
+    variants: [
+      { id: 'ac841602-0336-4afe-8f87-6eb017f55211', size: 'S', sku: 'THB-S', stock_quantity: 20 },
+      { id: 'b5840098-5607-40de-8292-9084dc077e08', size: 'M', sku: 'THB-M', stock_quantity: 25 },
+      { id: '002dc406-521b-4ccd-973e-99c4960445cb', size: 'L', sku: 'THB-L', stock_quantity: 15 }
     ],
     available_sizes: ['S', 'M', 'L'],
     in_stock: true,
@@ -281,6 +270,8 @@ export default function App() {
   const [products, setProducts] = useState<Product[]>(MOCK_PRODUCTS);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [completedOrder, setCompletedOrder] = useState<OrderConfirmation | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(MOCK_PRODUCTS[0]);
   const [selectedSize, setSelectedSize] = useState<string>('M');
   const [productQuantity, setProductQuantity] = useState<number>(1);
@@ -317,7 +308,7 @@ export default function App() {
         const found = products.find(p => p.slug === slug);
         if (found) {
           setSelectedProduct(found);
-          setSelectedSize('M');
+          setSelectedSize(found.available_sizes[0] || 'M');
           setSelectedGalleryIdx(0);
           setProductQuantity(1);
           setCurrentPage('product');
@@ -373,50 +364,67 @@ export default function App() {
     }
   };
 
-  // Fetch live products from backend and hydrate with real images and media
-  useEffect(() => {
-    fetch('http://127.0.0.1:8000/api/v1/products')
-      .then((res) => {
-        if (!res.ok) throw new Error('API request failed');
-        return res.json();
-      })
-      .then(async (catalog: Product[]) => {
-        if (catalog && catalog.length > 0) {
-          // Fetch full media array for each product in parallel
-          const enrichedList = await Promise.all(
-            catalog.map(async (prod) => {
-              const meta = PRODUCT_METADATA[prod.slug] || {};
-              try {
-                const detailRes = await fetch(`http://127.0.0.1:8000/api/v1/products/${prod.slug}`);
-                if (detailRes.ok) {
-                  const detail = await detailRes.json();
-                  const gallery = detail.images?.map((img: MediaItem) => img.image_url) || [prod.primary_image_url];
-                  return {
-                    ...prod,
-                    ...detail,
-                    ...meta,
-                    primary_image_url: prod.primary_image_url || gallery[0],
-                    gallery_urls: gallery,
-                    media: detail.images || []
-                  };
-                }
-              } catch {
-                // If detail fetch fails, use card response
+  // Reusable catalog loader that syncs live database variants and stock
+  const loadCatalog = async () => {
+    try {
+      const res = await fetch('http://127.0.0.1:8000/api/v1/products');
+      if (!res.ok) throw new Error('API request failed');
+      const catalog: Product[] = await res.json();
+      if (catalog && catalog.length > 0) {
+        // Fetch full media & variants array for each product in parallel
+        const enrichedList = await Promise.all(
+          catalog.map(async (prod) => {
+            const meta = PRODUCT_METADATA[prod.slug] || {};
+            try {
+              const detailRes = await fetch(`http://127.0.0.1:8000/api/v1/products/${prod.slug}`);
+              if (detailRes.ok) {
+                const detail = await detailRes.json();
+                const gallery = detail.images?.map((img: MediaItem) => img.image_url) || [prod.primary_image_url];
+                return {
+                  ...prod,
+                  ...detail,
+                  ...meta,
+                  primary_image_url: prod.primary_image_url || gallery[0],
+                  gallery_urls: gallery,
+                  media: detail.images || [],
+                  variants: detail.variants || [],
+                  available_sizes: detail.variants?.filter((v: Variant) => v.stock_quantity > 0).map((v: Variant) => v.size) || prod.available_sizes
+                };
               }
-              return {
-                ...prod,
-                ...meta,
-                gallery_urls: prod.primary_image_url ? [prod.primary_image_url] : []
-              };
-            })
-          );
-          setProducts(enrichedList);
-        }
-      })
-      .catch(() => {
-        setProducts(MOCK_PRODUCTS);
-      });
+            } catch {
+              // If detail fetch fails, use card response
+            }
+            return {
+              ...prod,
+              ...meta,
+              gallery_urls: prod.primary_image_url ? [prod.primary_image_url] : []
+            };
+          })
+        );
+        setProducts(enrichedList);
+        setSelectedProduct(prev => {
+          if (!prev) return prev;
+          const found = enrichedList.find(p => p.id === prev.id);
+          return found || prev;
+        });
+      }
+    } catch {
+      setProducts(MOCK_PRODUCTS);
+    }
+  };
+
+  useEffect(() => {
+    loadCatalog();
   }, []);
+
+  const handleOrderSuccess = (order: OrderConfirmation) => {
+    setCompletedOrder(order);
+    setCart([]);
+    setIsCheckoutOpen(false);
+    setIsCartOpen(false);
+    // Reload products so deducted stock quantities in PostgreSQL are updated in UI
+    loadCatalog();
+  };
 
   const toggleWishlist = (id: string) => {
     setWishlist(prev => 
@@ -424,32 +432,68 @@ export default function App() {
     );
   };
 
-  const addToCart = (product: Product, size: string, quantity = 1) => {
-    setCart(prev => {
-      const existing = prev.find(item => item.id === product.id && item.size === size);
-      if (existing) {
-        return prev.map(item =>
-          item.id === product.id && item.size === size
-            ? { ...item, quantity: item.quantity + quantity }
-            : item
-        );
+  const addToCart = (product: Product, selectedSize: string, quantity = 1) => {
+    const liveProd = products.find(p => p.id === product.id) || product;
+    const chosenVariant = liveProd.variants?.find((v) => v.size === selectedSize);
+
+    if (!chosenVariant) {
+      alert("Please select a size first.");
+      return;
+    }
+
+    if (chosenVariant.stock_quantity <= 0) {
+      alert(`Size ${selectedSize} is sold out.`);
+      return;
+    }
+
+    setCart((prevCart) => {
+      const existingIndex = prevCart.findIndex(
+        (item) => item.variant_id === chosenVariant.id
+      );
+
+      if (existingIndex > -1) {
+        const updated = [...prevCart];
+        const newQty = updated[existingIndex].quantity + quantity;
+        
+        if (newQty > chosenVariant.stock_quantity) {
+          alert(`Only ${chosenVariant.stock_quantity} available in size ${selectedSize}.`);
+          return prevCart;
+        }
+        
+        updated[existingIndex].quantity = newQty;
+        return updated;
       }
-      return [...prev, {
-        id: product.id,
-        name: product.name,
-        price: product.price,
-        size,
-        quantity,
-        image: product.primary_image_url || MOCK_PRODUCTS[0].primary_image_url!
-      }];
+
+      const primaryImg = liveProd.media?.find((img) => img.is_primary)?.image_url 
+        || liveProd.primary_image_url 
+        || liveProd.gallery_urls?.[0] 
+        || '';
+
+      return [
+        ...prevCart,
+        {
+          variant_id: chosenVariant.id,
+          product_id: liveProd.id,
+          name: liveProd.name,
+          size: chosenVariant.size,
+          price: liveProd.price,
+          image_url: primaryImg,
+          quantity: quantity,
+          max_stock: chosenVariant.stock_quantity,
+        },
+      ];
     });
     setIsCartOpen(true);
   };
 
-  const updateQuantity = (id: string, size: string, delta: number) => {
+  const updateQuantity = (variant_id: string, delta: number) => {
     setCart(prev => prev.map(item => {
-      if (item.id === id && item.size === size) {
+      if (item.variant_id === variant_id) {
         const newQty = item.quantity + delta;
+        if (newQty > item.max_stock) {
+          alert(`Only ${item.max_stock} available in stock for size ${item.size}.`);
+          return item;
+        }
         return newQty > 0 ? { ...item, quantity: newQty } : null;
       }
       return item;
@@ -1438,9 +1482,10 @@ export default function App() {
                   <button 
                     onClick={() => {
                       addToCart(selectedProduct, selectedSize, productQuantity);
-                      setIsCartOpen(true);
+                      setIsCartOpen(false);
+                      setIsCheckoutOpen(true);
                     }}
-                    className="w-full bg-[#28221e] hover:bg-black text-[#fbf9f5] h-12 text-xs uppercase tracking-[0.22em] font-medium transition flex items-center justify-center gap-2 cursor-pointer"
+                    className="w-full bg-[#28221e] hover:bg-black text-[#fbf9f5] h-12 text-xs uppercase tracking-[0.22em] font-medium transition flex items-center justify-center gap-2 cursor-pointer shadow-sm hover:shadow"
                   >
                     <span>BUY IT NOW (EXPRESS CHECKOUT)</span>
                   </button>
@@ -1981,8 +2026,8 @@ export default function App() {
                 </div>
               ) : (
                 cart.map((item) => (
-                  <div key={`${item.id}-${item.size}`} className="flex gap-4 pb-4 border-b border-[#f0eae1]">
-                    <img src={item.image} alt={item.name} className="w-20 h-24 object-cover bg-[#e9e2d8]" />
+                  <div key={item.variant_id} className="flex gap-4 pb-4 border-b border-[#f0eae1]">
+                    <img src={item.image_url} alt={item.name} className="w-20 h-24 object-cover bg-[#e9e2d8]" />
                     <div className="flex-1 flex flex-col justify-between">
                       <div>
                         <h4 className="font-serif text-sm font-medium">{item.name}</h4>
@@ -1991,15 +2036,17 @@ export default function App() {
                       </div>
                       <div className="flex items-center gap-3 mt-2">
                         <button 
-                          onClick={() => updateQuantity(item.id, item.size, -1)}
+                          onClick={() => updateQuantity(item.variant_id, -1)}
                           className="w-6 h-6 border border-[#d2c7bd] flex items-center justify-center hover:bg-black hover:text-white transition cursor-pointer"
+                          aria-label="Decrease quantity"
                         >
                           <Minus className="w-3 h-3" />
                         </button>
                         <span className="text-xs font-mono">{item.quantity}</span>
                         <button 
-                          onClick={() => updateQuantity(item.id, item.size, 1)}
+                          onClick={() => updateQuantity(item.variant_id, 1)}
                           className="w-6 h-6 border border-[#d2c7bd] flex items-center justify-center hover:bg-black hover:text-white transition cursor-pointer"
+                          aria-label="Increase quantity"
                         >
                           <Plus className="w-3 h-3" />
                         </button>
@@ -2017,12 +2064,89 @@ export default function App() {
                   <span className="font-serif text-xl font-bold">₹ {cartTotal.toLocaleString('en-IN')}</span>
                 </div>
                 <p className="text-[11px] text-[#736b63]">Taxes and shipping calculated at checkout.</p>
-                <button className="w-full bg-[#965438] text-white py-4 text-xs uppercase tracking-[0.22em] font-medium hover:bg-[#80442c] transition flex items-center justify-center gap-2 cursor-pointer shadow-sm hover:shadow">
+                <button 
+                  onClick={() => {
+                    setIsCartOpen(false);
+                    setIsCheckoutOpen(true);
+                  }}
+                  className="w-full bg-[#965438] text-white py-4 text-xs uppercase tracking-[0.22em] font-medium hover:bg-[#80442c] transition flex items-center justify-center gap-2 cursor-pointer shadow-sm hover:shadow"
+                >
                   <span>PROCEED TO CHECKOUT</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 8. CHECKOUT MODAL (WIRED TO POST /api/v1/orders/checkout) */}
+      {/* ========================================================================= */}
+      <CheckoutModal
+        isOpen={isCheckoutOpen}
+        onClose={() => setIsCheckoutOpen(false)}
+        cart={cart}
+        onOrderSuccess={handleOrderSuccess}
+      />
+
+      {/* ========================================================================= */}
+      {/* 9. ORDER CONFIRMATION SCREEN */}
+      {/* ========================================================================= */}
+      {completedOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fadeIn">
+          <div className="bg-[#FAF7F2] border border-[#E0D5C7] max-w-lg w-full p-8 text-center shadow-2xl relative my-8">
+            <div className="w-16 h-16 rounded-full bg-[#ede5dc] border border-[#dcd3c7] mx-auto flex items-center justify-center text-[#965438] mb-4">
+              <Sparkles className="w-8 h-8" />
+            </div>
+
+            <span className="text-[10px] uppercase tracking-[0.28em] text-[#965438] font-semibold block mb-1">
+              ORDER CONFIRMED
+            </span>
+            <h3 className="font-serif text-3xl text-[#28221e]">Thank You for Your Order</h3>
+            
+            <p className="text-xs text-stone-600 mt-2 font-light max-w-sm mx-auto">
+              Dear <strong className="font-semibold text-stone-800">{completedOrder.customer_name}</strong>, your order has been registered and inventory has been reserved.
+            </p>
+
+            <div className="mt-5 p-4 bg-white/80 border border-[#E0D5C7] text-left">
+              <div className="flex items-center justify-between pb-3 border-b border-[#E0D5C7]/70 text-xs">
+                <span className="text-stone-500 uppercase tracking-wider text-[10px]">Order Reference</span>
+                <span className="font-mono text-[11px] font-semibold text-[#965438] bg-[#FAF7F2] px-2 py-0.5 border border-[#E0D5C7]">
+                  {completedOrder.id}
+                </span>
+              </div>
+
+              <div className="py-3 border-b border-[#E0D5C7]/70 space-y-2 text-xs">
+                <span className="text-stone-500 uppercase tracking-wider text-[10px] block">Items Reserved</span>
+                {completedOrder.items?.map((it) => (
+                  <div key={it.id} className="flex justify-between items-center text-stone-800">
+                    <span>
+                      {it.product_name} <span className="text-stone-500">(Size {it.size} × {it.quantity})</span>
+                    </span>
+                    <span className="font-serif font-medium">₹ {(it.unit_price * it.quantity).toLocaleString('en-IN')}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="pt-3 flex justify-between items-baseline text-sm">
+                <span className="text-stone-700 font-medium text-xs uppercase tracking-wider">Total Paid</span>
+                <span className="font-serif text-xl font-bold text-[#28221e]">
+                  ₹ {completedOrder.total_amount.toLocaleString('en-IN')}
+                </span>
+              </div>
+            </div>
+
+            <p className="text-[11px] text-stone-500 mt-3 font-light">
+              Confirmation receipt sent to <strong className="text-stone-700">{completedOrder.email}</strong>.
+            </p>
+
+            <button
+              onClick={() => setCompletedOrder(null)}
+              className="mt-6 w-full bg-[#28221e] text-white py-3.5 text-xs uppercase tracking-[0.22em] font-medium hover:bg-black transition cursor-pointer shadow-sm"
+            >
+              CONTINUE SHOPPING
+            </button>
           </div>
         </div>
       )}
