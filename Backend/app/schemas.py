@@ -73,6 +73,11 @@ class OrderOut(BaseModel):
     id: UUID
     customer_name: str
     email: str
+    phone: Optional[str] = None
+    shipping_address: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+    pincode: Optional[str] = None
     total_amount: float
     status: str
     items: List[OrderItemOut]

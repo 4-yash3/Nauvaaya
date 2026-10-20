@@ -67,7 +67,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
         throw new Error(data.detail || 'Checkout failed. Please check stock and try again.');
       }
 
-      onOrderSuccess(data);
+      onOrderSuccess({ ...data, phone: data.phone || formData.phone, email: data.email || formData.email });
     } catch (err: any) {
       setErrorMessage(err.message || 'Network error occurred. Please check backend connection.');
     } finally {

@@ -32,6 +32,7 @@ import type {
   OrderConfirmation 
 } from './types';
 import { CheckoutModal } from './components/CheckoutModal';
+import { OrderStatusPage } from './components/OrderStatusPage';
 
 // Curated artisan metadata mapping for the database products
 const PRODUCT_METADATA: Record<string, Partial<Product>> = {
@@ -272,6 +273,18 @@ export default function App() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [completedOrder, setCompletedOrder] = useState<OrderConfirmation | null>(null);
+  const [trackedOrder, setTrackedOrder] = useState<{ id: string; email: string; phone: string } | null>(() => {
+    const query = new URLSearchParams(window.location.search);
+    const orderId = query.get('order_id') || query.get('order');
+    if (orderId) {
+      return {
+        id: orderId,
+        email: query.get('email') || '',
+        phone: query.get('phone') || ''
+      };
+    }
+    return null;
+  });
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(MOCK_PRODUCTS[0]);
   const [selectedSize, setSelectedSize] = useState<string>('M');
   const [productQuantity, setProductQuantity] = useState<number>(1);
@@ -303,6 +316,15 @@ export default function App() {
   useEffect(() => {
     const handleHash = () => {
       const hash = window.location.hash;
+      if (hash.startsWith('#order-')) {
+        const orderIdFromHash = hash.replace('#order-', '');
+        setTrackedOrder({
+          id: orderIdFromHash,
+          email: '',
+          phone: '',
+        });
+        return;
+      }
       if (hash.startsWith('#product-')) {
         const slug = hash.replace('#product-', '');
         const found = products.find(p => p.slug === slug);
@@ -422,6 +444,11 @@ export default function App() {
     setCart([]);
     setIsCheckoutOpen(false);
     setIsCartOpen(false);
+    setTrackedOrder({
+      id: order.id,
+      email: order.email,
+      phone: order.phone || '',
+    });
     // Reload products so deducted stock quantities in PostgreSQL are updated in UI
     loadCatalog();
   };
@@ -594,6 +621,23 @@ export default function App() {
     if (currentProductMedia.length === 0) return null;
     return currentProductMedia[selectedGalleryIdx] || currentProductMedia[0];
   }, [currentProductMedia, selectedGalleryIdx]);
+
+  if (trackedOrder) {
+    return (
+      <OrderStatusPage
+        orderId={trackedOrder.id}
+        initialEmail={trackedOrder.email}
+        initialPhone={trackedOrder.phone}
+        onBackToStore={() => {
+          setTrackedOrder(null);
+          setCompletedOrder(null);
+          if (window.location.search.includes('order')) {
+            window.history.replaceState({}, '', window.location.pathname);
+          }
+        }}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#f7f4ee] text-[#28221e] font-sans antialiased selection:bg-[#965438] selection:text-white">
@@ -1891,6 +1935,14 @@ export default function App() {
                 <li><a href="#faqs" className="hover:text-[#965438] transition">FAQs</a></li>
                 <li><a href="#shipping" className="hover:text-[#965438] transition">Shipping & Delivery</a></li>
                 <li><a href="#returns" className="hover:text-[#965438] transition">Returns & Exchanges</a></li>
+                <li>
+                  <button 
+                    onClick={() => setTrackedOrder({ id: '', email: '', phone: '' })} 
+                    className="hover:text-[#965438] transition cursor-pointer text-left"
+                  >
+                    Track Your Order
+                  </button>
+                </li>
                 <li><a href="#size-guide" className="hover:text-[#965438] transition">Size Guide</a></li>
                 <li><a href="#care" className="hover:text-[#965438] transition">Care Instructions</a></li>
               </ul>

@@ -7,12 +7,14 @@ from typing import List
 import os
 from pathlib import Path
 from fastapi.staticfiles import StaticFiles
+from fastapi import Query
 
 from app.database import get_db
 from app.models import Product, Order, OrderItem, ProductVariant
 from app.schemas import ProductDetailOut, ProductCardOut, CheckoutIn, OrderOut
 from sqlalchemy.orm import selectinload
 from app.models import Product, ProductVariant, Order, OrderItem, OrderStatus
+from uuid import UUID
 
 app = FastAPI(
     title="E-commerce Store API",
@@ -174,3 +176,47 @@ async def checkout(
     background_tasks.add_task(send_whatsapp_order_msg, saved_order)
 
     return saved_order
+
+
+@app.get("/api/v1/orders/{order_id}", response_model=OrderOut)
+async def get_order_status(
+    order_id: UUID,
+    email: str = Query(..., description="Customer email address used at checkout"),
+    phone: str = Query(..., description="Customer phone number used at checkout"),
+    db: AsyncSession = Depends(get_db)
+):
+    """Secure guest lookup requiring matching order ID, email, and phone."""
+    # 1. Clean and normalize inputs
+    clean_email = email.strip().lower()
+    clean_phone = phone.strip().replace(" ", "").replace("-", "")
+    
+    # 2. Fetch order with items
+    stmt = (
+        select(Order)
+        .options(selectinload(Order.items))
+        .where(Order.id == order_id)
+    )
+    result = await db.execute(stmt)
+    order = result.scalar_one_or_none()
+
+    if not order:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Order not found. Please verify the order reference."
+        )
+
+    # 3. Normalize stored database values for verification
+    db_email = order.email.strip().lower()
+    db_phone = order.phone.strip().replace(" ", "").replace("-", "")
+
+    # Compare phone suffix (last 10 digits) to handle +91 or leading 0 variations
+    input_phone_digits = clean_phone[-10:] if len(clean_phone) >= 10 else clean_phone
+    db_phone_digits = db_phone[-10:] if len(db_phone) >= 10 else db_phone
+
+    if db_email != clean_email or db_phone_digits != input_phone_digits:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Authentication failed. The provided email and phone do not match this order."
+        )
+
+    return order

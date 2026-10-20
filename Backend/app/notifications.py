@@ -61,6 +61,13 @@ EMAIL_TEMPLATE = """
         <strong style="font-family: monospace; font-size: 14px;">{{ order.id }}</strong>
       </div>
 
+      <div style="margin: 20px 0; text-align: center;">
+        <a href="http://localhost:5173/orders/{{ order.id }}?email={{ order.email }}&phone={{ order.phone }}"
+            style="background-color: #965438; color: #ffffff; text-decoration: none; padding: 12px 24px; font-size: 12px; letter-spacing: 0.15em; text-transform: uppercase; font-weight: 600; display: inline-block; border-radius: 2px;">
+            Track Order Status
+        </a>
+      </div>
+
       <div style="margin-top: 20px;">
         {% for item in order.items %}
         <div class="item-row">

@@ -66,8 +66,31 @@ export interface OrderConfirmation {
   id: string;
   customer_name: string;
   email: string;
+  phone?: string;
   total_amount: number;
   status: string;
   items: OrderItemConfirmation[];
+}
+
+export interface OrderItemDetails {
+  id: string;
+  product_name: string;
+  size: string;
+  unit_price: number;
+  quantity: number;
+}
+
+export interface OrderDetails {
+  id: string;
+  customer_name: string;
+  email: string;
+  phone: string;
+  shipping_address: string;
+  city: string;
+  state: string;
+  pincode: string;
+  total_amount: number;
+  status: string;
+  items: OrderItemDetails[];
 }
 
