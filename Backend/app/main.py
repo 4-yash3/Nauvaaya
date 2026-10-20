@@ -11,6 +11,8 @@ from fastapi.staticfiles import StaticFiles
 from app.database import get_db
 from app.models import Product, Order, OrderItem, ProductVariant
 from app.schemas import ProductDetailOut, ProductCardOut, CheckoutIn, OrderOut
+from sqlalchemy.orm import selectinload
+from app.models import Product, ProductVariant, Order, OrderItem, OrderStatus
 
 app = FastAPI(
     title="E-commerce Store API",
@@ -81,8 +83,15 @@ async def get_product_by_slug(slug: str, db: AsyncSession = Depends(get_db)):
         )
     return product
 
+from fastapi import BackgroundTasks
+from app.notifications import send_order_email, send_whatsapp_order_msg
+
 @app.post("/api/v1/orders/checkout", response_model=OrderOut, status_code=status.HTTP_201_CREATED)
-async def checkout(payload: CheckoutIn, db: AsyncSession = Depends(get_db)):
+async def checkout(
+    payload: CheckoutIn, 
+    background_tasks: BackgroundTasks,  # <-- Injected by FastAPI
+    db: AsyncSession = Depends(get_db)
+):
     if not payload.items:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, 
@@ -95,7 +104,6 @@ async def checkout(payload: CheckoutIn, db: AsyncSession = Depends(get_db)):
         order_items_to_create = []
 
         for item in payload.items:
-            # Row lock on the variant to prevent race conditions
             stmt = (
                 select(ProductVariant)
                 .where(ProductVariant.id == item.variant_id)
@@ -110,24 +118,19 @@ async def checkout(payload: CheckoutIn, db: AsyncSession = Depends(get_db)):
                     detail=f"Item variant {item.variant_id} does not exist."
                 )
 
-            # Check inventory
             if variant.stock_quantity < item.quantity:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail=f"Insufficient stock for size {variant.size}. Available: {variant.stock_quantity}."
                 )
 
-            # Fetch product for server-side price calculation
             prod_res = await db.execute(
                 select(Product).where(Product.id == variant.product_id)
             )
             product = prod_res.scalar_one_or_none()
 
             item_price = float(product.price)
-            line_total = item_price * item.quantity
-            calculated_total += line_total
-
-            # Atomic deduction
+            calculated_total += item_price * item.quantity
             variant.stock_quantity -= item.quantity
 
             order_items_to_create.append(
@@ -141,7 +144,6 @@ async def checkout(payload: CheckoutIn, db: AsyncSession = Depends(get_db)):
                 )
             )
 
-        # Create order record
         new_order = Order(
             customer_name=payload.customer_name,
             email=payload.email,
@@ -151,11 +153,24 @@ async def checkout(payload: CheckoutIn, db: AsyncSession = Depends(get_db)):
             state=payload.state,
             pincode=payload.pincode,
             total_amount=calculated_total,
-            status="pending",
+            status=OrderStatus.pending,
             items=order_items_to_create
         )
         db.add(new_order)
+        await db.flush()
+        order_id = new_order.id
 
-    # Reload with items relation
-    await db.refresh(new_order)
-    return new_order
+    # Fetch newly created order with eager items
+    stmt = (
+        select(Order)
+        .options(selectinload(Order.items))
+        .where(Order.id == order_id)
+    )
+    result = await db.execute(stmt)
+    saved_order = result.scalar_one()
+
+    # Dispatch notifications in the background (Non-blocking)
+    background_tasks.add_task(send_order_email, saved_order)
+    background_tasks.add_task(send_whatsapp_order_msg, saved_order)
+
+    return saved_order
