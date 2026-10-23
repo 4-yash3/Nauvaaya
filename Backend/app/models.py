@@ -46,6 +46,9 @@ class ProductImage(Base):
 
 class OrderStatus(str, enum.Enum):
     pending = "pending"
+    confirmed = "confirmed"
+    dispatched = "dispatched"
+    delivered = "delivered"
     paid = "paid"
     shipped = "shipped"
     cancelled = "cancelled"

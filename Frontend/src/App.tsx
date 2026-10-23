@@ -34,6 +34,7 @@ import type {
 import { CheckoutModal } from './components/CheckoutModal';
 import { OrderStatusPage } from './components/OrderStatusPage';
 import { AboutUsPage } from './components/AboutUsPage';
+import { AdminDashboard } from './components/AdminDashboard';
 
 // Curated artisan metadata mapping for the database products
 const PRODUCT_METADATA: Record<string, Partial<Product>> = {
@@ -269,6 +270,9 @@ const CATEGORIES = [
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<'home' | 'shop' | 'product' | 'about'>('home');
+  const [isAdminRoute, setIsAdminRoute] = useState<boolean>(
+    window.location.hash === '#admin'
+  );
   const [products, setProducts] = useState<Product[]>(MOCK_PRODUCTS);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -317,6 +321,11 @@ export default function App() {
   useEffect(() => {
     const handleHash = () => {
       const hash = window.location.hash;
+      const onAdmin = hash === '#admin';
+      setIsAdminRoute(onAdmin);
+      if (onAdmin) {
+        return;
+      }
       if (hash.startsWith('#order-')) {
         const orderIdFromHash = hash.replace('#order-', '');
         setTrackedOrder({
@@ -388,14 +397,21 @@ export default function App() {
       if (res.ok) {
         const detail = await res.json();
         const gallery = detail.images?.map((img: MediaItem) => img.image_url) || product.gallery_urls;
-        setSelectedProduct(prev => prev ? {
-          ...prev,
-          ...detail,
-          gallery_urls: gallery,
-          media: detail.images || prev.media,
-          variants: detail.variants || prev.variants,
-          available_sizes: detail.variants?.filter((v: Variant) => v.stock_quantity > 0).map((v: Variant) => v.size) || prev.available_sizes
-        } : null);
+        setSelectedProduct(prev => {
+          if (!prev) return null;
+          const detailStock = detail.variants && detail.variants.length > 0
+            ? detail.variants.some((v: Variant) => v.stock_quantity > 0)
+            : prev.in_stock;
+          return {
+            ...prev,
+            ...detail,
+            gallery_urls: gallery,
+            media: detail.images || prev.media,
+            variants: detail.variants || prev.variants,
+            available_sizes: detail.variants?.filter((v: Variant) => v.stock_quantity > 0).map((v: Variant) => v.size) || prev.available_sizes,
+            in_stock: detailStock
+          };
+        });
       }
     } catch {
       // Fallback seamlessly to existing product state
@@ -418,6 +434,9 @@ export default function App() {
               if (detailRes.ok) {
                 const detail = await detailRes.json();
                 const gallery = detail.images?.map((img: MediaItem) => img.image_url) || [prod.primary_image_url];
+                const hasStock = detail.variants && detail.variants.length > 0
+                  ? detail.variants.some((v: Variant) => v.stock_quantity > 0)
+                  : (prod.in_stock ?? true);
                 return {
                   ...prod,
                   ...detail,
@@ -426,7 +445,8 @@ export default function App() {
                   gallery_urls: gallery,
                   media: detail.images || [],
                   variants: detail.variants || [],
-                  available_sizes: detail.variants?.filter((v: Variant) => v.stock_quantity > 0).map((v: Variant) => v.size) || prod.available_sizes
+                  available_sizes: detail.variants?.filter((v: Variant) => v.stock_quantity > 0).map((v: Variant) => v.size) || prod.available_sizes,
+                  in_stock: hasStock
                 };
               }
             } catch {
@@ -637,6 +657,17 @@ export default function App() {
     if (currentProductMedia.length === 0) return null;
     return currentProductMedia[selectedGalleryIdx] || currentProductMedia[0];
   }, [currentProductMedia, selectedGalleryIdx]);
+
+  if (isAdminRoute) {
+    return (
+      <AdminDashboard
+        onBackToStore={() => {
+          window.location.hash = '';
+          setIsAdminRoute(false);
+        }}
+      />
+    );
+  }
 
   if (trackedOrder) {
     return (
@@ -922,7 +953,9 @@ export default function App() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {products.slice(0, 4).map((shirt) => (
+              {products.slice(0, 4).map((shirt) => {
+                const isOutOfStock = !shirt.in_stock || (shirt.variants && shirt.variants.length > 0 && shirt.variants.every(v => v.stock_quantity <= 0));
+                return (
                 <div 
                   key={shirt.id} 
                   className="group flex flex-col cursor-pointer"
@@ -935,11 +968,17 @@ export default function App() {
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                     />
                     
-                    {shirt.tag && (
-                      <span className="absolute top-3.5 left-3.5 bg-[#28221e]/85 backdrop-blur-md text-white text-[9px] uppercase tracking-[0.2em] font-medium px-2 py-0.5">
+                    {isOutOfStock ? (
+                      <div className="absolute inset-0 bg-black/45 backdrop-blur-[1px] flex items-center justify-center z-10 pointer-events-none">
+                        <span className="bg-[#28221e] text-white border border-white/20 text-[10px] uppercase tracking-[0.25em] font-semibold px-3 py-1.5 shadow-md">
+                          OUT OF STOCK
+                        </span>
+                      </div>
+                    ) : shirt.tag ? (
+                      <span className="absolute top-3.5 left-3.5 bg-[#28221e]/85 backdrop-blur-md text-white text-[9px] uppercase tracking-[0.2em] font-medium px-2 py-0.5 z-10">
                         {shirt.tag}
                       </span>
-                    )}
+                    ) : null}
 
                     <button 
                       onClick={(e) => {
@@ -981,7 +1020,8 @@ export default function App() {
                     ))}
                   </div>
                 </div>
-              ))}
+              );
+              })}
             </div>
 
             {/* Pagination Controls */}
@@ -1137,7 +1177,9 @@ export default function App() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-12">
-              {filteredProducts.map((shirt) => (
+              {filteredProducts.map((shirt) => {
+                const isOutOfStock = !shirt.in_stock || (shirt.variants && shirt.variants.length > 0 && shirt.variants.every(v => v.stock_quantity <= 0));
+                return (
                 <div 
                   key={shirt.id} 
                   className="group flex flex-col cursor-pointer"
@@ -1150,11 +1192,17 @@ export default function App() {
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                     />
 
-                    {shirt.tag && (
-                      <span className="absolute top-3.5 left-3.5 bg-[#28221e]/85 backdrop-blur-md text-white text-[9px] uppercase tracking-[0.22em] font-medium px-2.5 py-1">
+                    {isOutOfStock ? (
+                      <div className="absolute inset-0 bg-black/45 backdrop-blur-[1px] flex items-center justify-center z-10 pointer-events-none">
+                        <span className="bg-[#28221e] text-white border border-white/20 text-[10px] uppercase tracking-[0.25em] font-semibold px-3.5 py-1.5 shadow-md">
+                          OUT OF STOCK
+                        </span>
+                      </div>
+                    ) : shirt.tag ? (
+                      <span className="absolute top-3.5 left-3.5 bg-[#28221e]/85 backdrop-blur-md text-white text-[9px] uppercase tracking-[0.22em] font-medium px-2.5 py-1 z-10">
                         {shirt.tag}
                       </span>
-                    )}
+                    ) : null}
 
                     <button 
                       onClick={(e) => {
@@ -1200,7 +1248,8 @@ export default function App() {
                     ))}
                   </div>
                 </div>
-              ))}
+              );
+              })}
             </div>
           )}
 
@@ -1437,12 +1486,21 @@ export default function App() {
                   {selectedProduct.name}
                 </h1>
 
-                {/* Price */}
-                <div className="flex items-baseline gap-3 mt-3">
+                {/* Price & Live Stock Indicator */}
+                <div className="flex items-center gap-3 mt-3">
                   <span className="text-2xl sm:text-3xl font-normal text-[#28221e]">
                     ₹ {selectedProduct.price.toLocaleString('en-IN')}
                   </span>
                   <span className="text-xs text-[#736b63] font-light">Inclusive of all taxes</span>
+                  {(!selectedProduct.in_stock || (selectedProduct.variants && selectedProduct.variants.length > 0 && selectedProduct.variants.every(v => v.stock_quantity <= 0))) ? (
+                    <span className="bg-red-50 text-red-700 border border-red-200 text-[10px] uppercase font-mono px-2.5 py-0.5 font-bold tracking-wider">
+                      OUT OF STOCK
+                    </span>
+                  ) : (
+                    <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] uppercase font-mono px-2.5 py-0.5 font-medium tracking-wider">
+                      IN STOCK
+                    </span>
+                  )}
                 </div>
 
                 {/* Story Description */}
@@ -1482,20 +1540,32 @@ export default function App() {
                     </button>
                   </div>
 
-                  <div className="grid grid-cols-4 gap-3">
-                    {(selectedProduct.available_sizes.length > 0 ? selectedProduct.available_sizes : ['S', 'M', 'L']).map((sz) => (
-                      <button
-                        key={sz}
-                        onClick={() => setSelectedSize(sz)}
-                        className={`py-3 text-xs font-medium uppercase border transition-all cursor-pointer ${
-                          selectedSize === sz 
-                            ? 'border-[#965438] bg-[#965438] text-white shadow-xs' 
-                            : 'border-[#d2c7bd] text-[#28221e] hover:border-[#28221e] bg-white'
-                        }`}
-                      >
-                        {sz}
-                      </button>
-                    ))}
+                  <div className="grid grid-cols-3 gap-3">
+                    {['S', 'M', 'L'].map((sz) => {
+                      const variantForSize = selectedProduct.variants?.find(v => v.size === sz);
+                      const isSoldOut = variantForSize ? variantForSize.stock_quantity <= 0 : false;
+                      const isSelected = selectedSize === sz;
+
+                      return (
+                        <button
+                          key={sz}
+                          disabled={isSoldOut}
+                          onClick={() => setSelectedSize(sz)}
+                          className={`py-3 text-xs font-medium uppercase border transition-all relative ${
+                            isSoldOut
+                              ? 'border-stone-200 bg-stone-100 text-stone-400 cursor-not-allowed line-through'
+                              : isSelected
+                              ? 'border-[#965438] bg-[#965438] text-white shadow-xs cursor-pointer'
+                              : 'border-[#d2c7bd] text-[#28221e] hover:border-[#28221e] bg-white cursor-pointer'
+                          }`}
+                        >
+                          <span>{sz}</span>
+                          {isSoldOut && (
+                            <span className="block text-[8px] no-underline font-normal text-red-600 mt-0.5">Sold Out</span>
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
 
                   {/* Scarcity / Small Batch note */}
@@ -1526,27 +1596,48 @@ export default function App() {
                       </button>
                     </div>
 
-                    <button 
-                      onClick={() => addToCart(selectedProduct, selectedSize, productQuantity)}
-                      className="flex-1 bg-[#965438] hover:bg-[#80442c] text-white h-12 text-xs uppercase tracking-[0.22em] font-medium transition flex items-center justify-center gap-3 cursor-pointer shadow-sm hover:shadow"
-                    >
-                      <span>ADD TO BAG</span>
-                      <span>•</span>
-                      <span>₹ {(selectedProduct.price * productQuantity).toLocaleString('en-IN')}</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </button>
+                    {(() => {
+                      const isSelectedProductOutOfStock = !selectedProduct.in_stock || 
+                        (selectedProduct.variants && selectedProduct.variants.length > 0 && selectedProduct.variants.every(v => v.stock_quantity <= 0));
+                      const selectedVariant = selectedProduct.variants?.find(v => v.size === selectedSize);
+                      const isSelectedSizeSoldOut = selectedVariant ? selectedVariant.stock_quantity <= 0 : false;
+                      const disableButton = isSelectedProductOutOfStock || isSelectedSizeSoldOut;
+
+                      return (
+                        <button 
+                          disabled={disableButton}
+                          onClick={() => addToCart(selectedProduct, selectedSize, productQuantity)}
+                          className={`flex-1 h-12 text-xs uppercase tracking-[0.22em] font-medium transition flex items-center justify-center gap-3 shadow-sm ${
+                            disableButton
+                              ? 'bg-stone-300 text-stone-500 cursor-not-allowed'
+                              : 'bg-[#965438] hover:bg-[#80442c] text-white cursor-pointer hover:shadow'
+                          }`}
+                        >
+                          <span>{isSelectedProductOutOfStock ? 'OUT OF STOCK' : isSelectedSizeSoldOut ? `SIZE ${selectedSize} SOLD OUT` : 'ADD TO BAG'}</span>
+                          {!disableButton && (
+                            <>
+                              <span>•</span>
+                              <span>₹ {(selectedProduct.price * productQuantity).toLocaleString('en-IN')}</span>
+                              <ArrowRight className="w-4 h-4" />
+                            </>
+                          )}
+                        </button>
+                      );
+                    })()}
                   </div>
 
-                  <button 
-                    onClick={() => {
-                      addToCart(selectedProduct, selectedSize, productQuantity);
-                      setIsCartOpen(false);
-                      setIsCheckoutOpen(true);
-                    }}
-                    className="w-full bg-[#28221e] hover:bg-black text-[#fbf9f5] h-12 text-xs uppercase tracking-[0.22em] font-medium transition flex items-center justify-center gap-2 cursor-pointer shadow-sm hover:shadow"
-                  >
-                    <span>BUY IT NOW (EXPRESS CHECKOUT)</span>
-                  </button>
+                  {(!selectedProduct.in_stock || (selectedProduct.variants && selectedProduct.variants.length > 0 && selectedProduct.variants.every(v => v.stock_quantity <= 0)) || (selectedProduct.variants?.find(v => v.size === selectedSize)?.stock_quantity ?? 0) <= 0) ? null : (
+                    <button 
+                      onClick={() => {
+                        addToCart(selectedProduct, selectedSize, productQuantity);
+                        setIsCartOpen(false);
+                        setIsCheckoutOpen(true);
+                      }}
+                      className="w-full bg-[#28221e] hover:bg-black text-[#fbf9f5] h-12 text-xs uppercase tracking-[0.22em] font-medium transition flex items-center justify-center gap-2 cursor-pointer shadow-sm hover:shadow"
+                    >
+                      <span>BUY IT NOW (EXPRESS CHECKOUT)</span>
+                    </button>
+                  )}
                 </div>
 
                 {/* Fast Highlights */}

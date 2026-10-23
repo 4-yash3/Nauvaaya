@@ -1,6 +1,7 @@
 export interface MediaItem {
   id?: string;
   image_url: string;
+  in_stock?: boolean;
   alt_text?: string;
   is_primary?: boolean;
   display_order?: number;
@@ -69,6 +70,7 @@ export interface OrderConfirmation {
   phone?: string;
   total_amount: number;
   status: string;
+  created_at?: string;
   items: OrderItemConfirmation[];
 }
 
@@ -91,6 +93,23 @@ export interface OrderDetails {
   pincode: string;
   total_amount: number;
   status: string;
+  created_at?: string;
   items: OrderItemDetails[];
+}
+
+export interface AdminVariant {
+  id: string;
+  size: string;
+  stock_quantity: number;
+}
+
+export interface AdminProduct {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  price: number;
+  image_url: string;
+  variants: AdminVariant[];
 }
 

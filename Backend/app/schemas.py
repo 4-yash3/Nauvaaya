@@ -1,3 +1,4 @@
+from datetime import datetime
 from uuid import UUID
 from pydantic import BaseModel, ConfigDict
 from typing import List, Optional
@@ -80,6 +81,7 @@ class OrderOut(BaseModel):
     pincode: Optional[str] = None
     total_amount: float
     status: str
+    created_at: Optional[datetime] = None
     items: List[OrderItemOut]
 
     model_config = ConfigDict(from_attributes=True)
