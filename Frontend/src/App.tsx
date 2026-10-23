@@ -33,6 +33,7 @@ import type {
 } from './types';
 import { CheckoutModal } from './components/CheckoutModal';
 import { OrderStatusPage } from './components/OrderStatusPage';
+import { AboutUsPage } from './components/AboutUsPage';
 
 // Curated artisan metadata mapping for the database products
 const PRODUCT_METADATA: Record<string, Partial<Product>> = {
@@ -267,7 +268,7 @@ const CATEGORIES = [
 ];
 
 export default function App() {
-  const [currentPage, setCurrentPage] = useState<'home' | 'shop' | 'product'>('home');
+  const [currentPage, setCurrentPage] = useState<'home' | 'shop' | 'product' | 'about'>('home');
   const [products, setProducts] = useState<Product[]>(MOCK_PRODUCTS);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -337,6 +338,11 @@ export default function App() {
           return;
         }
       }
+      if (hash === '#about') {
+        setCurrentPage('about');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
       if (hash.startsWith('#shop')) {
         setCurrentPage('shop');
       } else {
@@ -348,13 +354,23 @@ export default function App() {
     return () => window.removeEventListener('hashchange', handleHash);
   }, [products]);
 
-  const navigateTo = (page: 'home' | 'shop', category = 'All') => {
+  const navigateTo = (page: 'home' | 'shop' | 'about', category = 'All') => {
     setCurrentPage(page);
     if (category !== 'All') {
       setSelectedCategory(category);
     }
-    window.location.hash = page === 'shop' ? '#shop' : '';
+    if (page === 'shop') {
+      window.location.hash = '#shop';
+    } else if (page === 'about') {
+      window.location.hash = '#about';
+    } else {
+      window.location.hash = '';
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleAboutClick = () => {
+    navigateTo('about');
   };
 
   const openProductPage = async (product: Product) => {
@@ -669,28 +685,17 @@ export default function App() {
       <header className="sticky top-0 z-40 bg-[#f7f4ee]/90 backdrop-blur-md border-b border-[#e6dfd5]/60 transition-all">
         <div className="max-w-[1440px] mx-auto px-6 lg:px-12 h-20 sm:h-24 flex items-center justify-between">
           
-          {/* Left Navigation */}
+          {/* Left Navigation (Collections removed as requested) */}
           <nav className="flex items-center gap-6 sm:gap-8 text-[11px] sm:text-xs uppercase tracking-[0.22em] font-medium text-[#443c37]">
             <button 
               onClick={() => navigateTo('shop', 'All')}
               className={`flex items-center gap-1.5 transition cursor-pointer ${
-                currentPage === 'shop' && selectedCategory === 'All'
+                currentPage === 'shop'
                   ? 'text-[#965438] font-bold border-b-2 border-[#965438] pb-0.5' 
                   : 'hover:text-[#965438]'
               }`}
             >
               SHOP <ChevronDown className="w-3 h-3 opacity-60 stroke-[1.5]" />
-            </button>
-            
-            <button 
-              onClick={() => navigateTo('shop', 'Exclusive Collections')}
-              className={`flex items-center gap-1.5 transition cursor-pointer ${
-                currentPage === 'shop' && selectedCategory === 'Exclusive Collections'
-                  ? 'text-[#965438] font-bold border-b-2 border-[#965438] pb-0.5' 
-                  : 'hover:text-[#965438]'
-              }`}
-            >
-              COLLECTIONS <ChevronDown className="w-3 h-3 opacity-60 stroke-[1.5]" />
             </button>
             
             <button 
@@ -717,7 +722,16 @@ export default function App() {
           {/* Right Navigation & Icons */}
           <div className="flex items-center gap-5 sm:gap-7">
             <nav className="hidden lg:flex items-center gap-8 text-[11px] sm:text-xs uppercase tracking-[0.22em] font-medium text-[#443c37]">
-              <a href="#about" className="hover:text-[#965438] transition">OUR ABOUT</a>
+              <button 
+                onClick={handleAboutClick}
+                className={`hover:text-[#965438] transition cursor-pointer uppercase tracking-[0.22em] ${
+                  currentPage === 'about'
+                    ? 'text-[#965438] font-bold border-b-2 border-[#965438] pb-0.5' 
+                    : ''
+                }`}
+              >
+                ABOUT US
+              </button>
               <a href="#contact" className="hover:text-[#965438] transition">CONTACT</a>
             </nav>
             
@@ -1687,6 +1701,14 @@ export default function App() {
         </main>
       )}
 
+      {/* ABOUT US DEDICATED PAGE */}
+      {currentPage === 'about' && (
+        <AboutUsPage 
+          onExploreCollection={() => navigateTo('shop')} 
+          onNavigateHome={() => navigateTo('home')} 
+        />
+      )}
+
       {/* ========================================================================= */}
       {/* 4. NEWSLETTER SECTION */}
       {/* ========================================================================= */}
@@ -1914,11 +1936,18 @@ export default function App() {
 
             <div className="lg:col-span-2">
               <span className="text-xs uppercase tracking-[0.22em] font-semibold text-[#28221e] block">
-                ABOUT
+                ABOUT US
               </span>
               <div className="w-5 h-[1.5px] bg-[#28221e]/30 mt-1.5 mb-5" />
               <ul className="space-y-3 text-xs sm:text-[13px] text-[#554b44]">
-                <li><a href="#story" className="hover:text-[#965438] transition">Our Story</a></li>
+                <li>
+                  <button 
+                    onClick={handleAboutClick} 
+                    className="hover:text-[#965438] transition cursor-pointer text-left"
+                  >
+                    Our Story & Craft
+                  </button>
+                </li>
                 <li><a href="#journal" className="hover:text-[#965438] transition">Our Journal</a></li>
                 <li><a href="#craft" className="hover:text-[#965438] transition">Craft & Culture</a></li>
                 <li><a href="#sustainability" className="hover:text-[#965438] transition">Sustainability</a></li>
