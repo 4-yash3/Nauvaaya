@@ -16,6 +16,8 @@ import {
 } from 'lucide-react';
 import type { OrderDetails, AdminProduct } from '../types';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
+
 export const AdminDashboard: React.FC<{ onBackToStore: () => void }> = ({ onBackToStore }) => {
   // Session Authentication State
   const [adminToken, setAdminToken] = useState<string>(() => sessionStorage.getItem('nauvaaya_admin_token') || '');
@@ -57,10 +59,10 @@ export const AdminDashboard: React.FC<{ onBackToStore: () => void }> = ({ onBack
     setIsLoading(true);
     try {
       const [ordersRes, prodsRes] = await Promise.all([
-        fetch('http://127.0.0.1:8000/api/v1/admin/orders', {
+        fetch(`${API_BASE_URL}/api/v1/admin/orders`, {
           headers: { 'X-Admin-Token': token }
         }),
-        fetch('http://127.0.0.1:8000/api/v1/admin/products', {
+        fetch(`${API_BASE_URL}/api/v1/admin/products`, {
           headers: { 'X-Admin-Token': token }
         })
       ]);
@@ -106,7 +108,7 @@ export const AdminDashboard: React.FC<{ onBackToStore: () => void }> = ({ onBack
     setLoginError(null);
 
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/v1/admin/login', {
+      const res = await fetch(`${API_BASE_URL}/api/v1/admin/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: loginEmail, password: loginPassword })
@@ -139,7 +141,7 @@ export const AdminDashboard: React.FC<{ onBackToStore: () => void }> = ({ onBack
 
   const handleStatusChange = async (orderId: string, newStatus: string) => {
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/v1/admin/orders/${orderId}/status`, {
+      const res = await fetch(`${API_BASE_URL}/api/v1/admin/orders/${orderId}/status`, {
         method: 'PATCH',
         headers: { 
           'Content-Type': 'application/json',
@@ -165,7 +167,7 @@ export const AdminDashboard: React.FC<{ onBackToStore: () => void }> = ({ onBack
         variants: prod.variants.map(v => v.id === variantId ? { ...v, stock_quantity: newQty } : v)
       })));
 
-      await fetch(`http://127.0.0.1:8000/api/v1/admin/variants/${variantId}/stock`, {
+      await fetch(`${API_BASE_URL}/api/v1/admin/variants/${variantId}/stock`, {
         method: 'PATCH',
         headers: { 
           'Content-Type': 'application/json',
@@ -188,7 +190,7 @@ export const AdminDashboard: React.FC<{ onBackToStore: () => void }> = ({ onBack
 
     try {
       setIsLoading(true);
-      const res = await fetch(`http://127.0.0.1:8000/api/v1/admin/products/${productId}`, {
+      const res = await fetch(`${API_BASE_URL}/api/v1/admin/products/${productId}`, {
         method: 'DELETE',
         headers: { 'X-Admin-Token': adminToken }
       });
@@ -217,7 +219,7 @@ export const AdminDashboard: React.FC<{ onBackToStore: () => void }> = ({ onBack
       setUploadPreview(base64Data);
       setUploadingImage(true);
       try {
-        const res = await fetch('http://127.0.0.1:8000/api/v1/admin/upload-image', {
+        const res = await fetch(`${API_BASE_URL}/api/v1/admin/upload-image`, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
@@ -266,7 +268,7 @@ export const AdminDashboard: React.FC<{ onBackToStore: () => void }> = ({ onBack
         ]
       };
 
-      const res = await fetch('http://127.0.0.1:8000/api/v1/admin/products', {
+      const res = await fetch(`${API_BASE_URL}/api/v1/admin/products`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',

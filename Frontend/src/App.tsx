@@ -36,6 +36,8 @@ import { OrderStatusPage } from './components/OrderStatusPage';
 import { AboutUsPage } from './components/AboutUsPage';
 import { AdminDashboard } from './components/AdminDashboard';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
+
 // Curated artisan metadata mapping for the database products
 const PRODUCT_METADATA: Record<string, Partial<Product>> = {
   'paper-and-poppy': {
@@ -82,18 +84,18 @@ const MOCK_PRODUCTS: Product[] = [
     name: 'Sun and Script',
     slug: 'sun-and-script',
     price: 1499,
-    primary_image_url: 'http://127.0.0.1:8000/static/products/sun-and-script/1.png',
+    primary_image_url: `${API_BASE_URL}/static/products/sun-and-script/1.png`,
     gallery_urls: [
-      'http://127.0.0.1:8000/static/products/sun-and-script/1.png',
-      'http://127.0.0.1:8000/static/products/sun-and-script/2.png',
-      'http://127.0.0.1:8000/static/products/sun-and-script/3.png',
-      'http://127.0.0.1:8000/static/products/sun-and-script/4.png'
+      `${API_BASE_URL}/static/products/sun-and-script/1.png`,
+      `${API_BASE_URL}/static/products/sun-and-script/2.png`,
+      `${API_BASE_URL}/static/products/sun-and-script/3.png`,
+      `${API_BASE_URL}/static/products/sun-and-script/4.png`
     ],
     media: [
-      { image_url: 'http://127.0.0.1:8000/static/products/sun-and-script/1.png', media_type: 'image' },
-      { image_url: 'http://127.0.0.1:8000/static/products/sun-and-script/2.png', media_type: 'image' },
-      { image_url: 'http://127.0.0.1:8000/static/products/sun-and-script/3.png', media_type: 'image' },
-      { image_url: 'http://127.0.0.1:8000/static/products/sun-and-script/4.png', media_type: 'image' }
+      { image_url: `${API_BASE_URL}/static/products/sun-and-script/1.png`, media_type: 'image' },
+      { image_url: `${API_BASE_URL}/static/products/sun-and-script/2.png`, media_type: 'image' },
+      { image_url: `${API_BASE_URL}/static/products/sun-and-script/3.png`, media_type: 'image' },
+      { image_url: `${API_BASE_URL}/static/products/sun-and-script/4.png`, media_type: 'image' }
     ],
     variants: [
       { id: 'fda95c1c-263b-48fe-add7-c92662421133', size: 'S', sku: 'SAS-S', stock_quantity: 15 },
@@ -114,20 +116,20 @@ const MOCK_PRODUCTS: Product[] = [
     name: 'Paper and Poppy',
     slug: 'paper-and-poppy',
     price: 1499,
-    primary_image_url: 'http://127.0.0.1:8000/static/products/paper-and-poppy/1.png',
+    primary_image_url: `${API_BASE_URL}/static/products/paper-and-poppy/1.png`,
     gallery_urls: [
-      'http://127.0.0.1:8000/static/products/paper-and-poppy/1.png',
-      'http://127.0.0.1:8000/static/products/paper-and-poppy/2.png',
-      'http://127.0.0.1:8000/static/products/paper-and-poppy/3.png',
-      'http://127.0.0.1:8000/static/products/paper-and-poppy/4.png',
-      'http://127.0.0.1:8000/static/products/paper-and-poppy/video.mp4'
+      `${API_BASE_URL}/static/products/paper-and-poppy/1.png`,
+      `${API_BASE_URL}/static/products/paper-and-poppy/2.png`,
+      `${API_BASE_URL}/static/products/paper-and-poppy/3.png`,
+      `${API_BASE_URL}/static/products/paper-and-poppy/4.png`,
+      `${API_BASE_URL}/static/products/paper-and-poppy/video.mp4`
     ],
     media: [
-      { image_url: 'http://127.0.0.1:8000/static/products/paper-and-poppy/1.png', media_type: 'image' },
-      { image_url: 'http://127.0.0.1:8000/static/products/paper-and-poppy/2.png', media_type: 'image' },
-      { image_url: 'http://127.0.0.1:8000/static/products/paper-and-poppy/3.png', media_type: 'image' },
-      { image_url: 'http://127.0.0.1:8000/static/products/paper-and-poppy/4.png', media_type: 'image' },
-      { image_url: 'http://127.0.0.1:8000/static/products/paper-and-poppy/video.mp4', media_type: 'video' }
+      { image_url: `${API_BASE_URL}/static/products/paper-and-poppy/1.png`, media_type: 'image' },
+      { image_url: `${API_BASE_URL}/static/products/paper-and-poppy/2.png`, media_type: 'image' },
+      { image_url: `${API_BASE_URL}/static/products/paper-and-poppy/3.png`, media_type: 'image' },
+      { image_url: `${API_BASE_URL}/static/products/paper-and-poppy/4.png`, media_type: 'image' },
+      { image_url: `${API_BASE_URL}/static/products/paper-and-poppy/video.mp4`, media_type: 'video' }
     ],
     variants: [
       { id: '96e32176-c07a-4654-85b0-49c2137af444', size: 'S', sku: 'PAP-S', stock_quantity: 15 },
@@ -148,20 +150,20 @@ const MOCK_PRODUCTS: Product[] = [
     name: 'The back story Edit',
     slug: 'the-back-story-edit',
     price: 1699,
-    primary_image_url: 'http://127.0.0.1:8000/static/products/the-back-story-edit/1.png',
+    primary_image_url: `${API_BASE_URL}/static/products/the-back-story-edit/1.png`,
     gallery_urls: [
-      'http://127.0.0.1:8000/static/products/the-back-story-edit/1.png',
-      'http://127.0.0.1:8000/static/products/the-back-story-edit/2.png',
-      'http://127.0.0.1:8000/static/products/the-back-story-edit/3.png',
-      'http://127.0.0.1:8000/static/products/the-back-story-edit/4.png',
-      'http://127.0.0.1:8000/static/products/the-back-story-edit/video.mp4'
+      `${API_BASE_URL}/static/products/the-back-story-edit/1.png`,
+      `${API_BASE_URL}/static/products/the-back-story-edit/2.png`,
+      `${API_BASE_URL}/static/products/the-back-story-edit/3.png`,
+      `${API_BASE_URL}/static/products/the-back-story-edit/4.png`,
+      `${API_BASE_URL}/static/products/the-back-story-edit/video.mp4`
     ],
     media: [
-      { image_url: 'http://127.0.0.1:8000/static/products/the-back-story-edit/1.png', media_type: 'image' },
-      { image_url: 'http://127.0.0.1:8000/static/products/the-back-story-edit/2.png', media_type: 'image' },
-      { image_url: 'http://127.0.0.1:8000/static/products/the-back-story-edit/3.png', media_type: 'image' },
-      { image_url: 'http://127.0.0.1:8000/static/products/the-back-story-edit/4.png', media_type: 'image' },
-      { image_url: 'http://127.0.0.1:8000/static/products/the-back-story-edit/video.mp4', media_type: 'video' }
+      { image_url: `${API_BASE_URL}/static/products/the-back-story-edit/1.png`, media_type: 'image' },
+      { image_url: `${API_BASE_URL}/static/products/the-back-story-edit/2.png`, media_type: 'image' },
+      { image_url: `${API_BASE_URL}/static/products/the-back-story-edit/3.png`, media_type: 'image' },
+      { image_url: `${API_BASE_URL}/static/products/the-back-story-edit/4.png`, media_type: 'image' },
+      { image_url: `${API_BASE_URL}/static/products/the-back-story-edit/video.mp4`, media_type: 'video' }
     ],
     variants: [
       { id: '511f553f-c373-41f1-845c-4062910c645f', size: 'S', sku: 'BSE-S', stock_quantity: 12 },
@@ -182,20 +184,20 @@ const MOCK_PRODUCTS: Product[] = [
     name: 'The statement Spine',
     slug: 'the-statement-spine',
     price: 1599,
-    primary_image_url: 'http://127.0.0.1:8000/static/products/the-statement-spine/1.png',
+    primary_image_url: `${API_BASE_URL}/static/products/the-statement-spine/1.png`,
     gallery_urls: [
-      'http://127.0.0.1:8000/static/products/the-statement-spine/1.png',
-      'http://127.0.0.1:8000/static/products/the-statement-spine/2.png',
-      'http://127.0.0.1:8000/static/products/the-statement-spine/3.png',
-      'http://127.0.0.1:8000/static/products/the-statement-spine/4.png',
-      'http://127.0.0.1:8000/static/products/the-statement-spine/video.mp4'
+      `${API_BASE_URL}/static/products/the-statement-spine/1.png`,
+      `${API_BASE_URL}/static/products/the-statement-spine/2.png`,
+      `${API_BASE_URL}/static/products/the-statement-spine/3.png`,
+      `${API_BASE_URL}/static/products/the-statement-spine/4.png`,
+      `${API_BASE_URL}/static/products/the-statement-spine/video.mp4`
     ],
     media: [
-      { image_url: 'http://127.0.0.1:8000/static/products/the-statement-spine/1.png', media_type: 'image' },
-      { image_url: 'http://127.0.0.1:8000/static/products/the-statement-spine/2.png', media_type: 'image' },
-      { image_url: 'http://127.0.0.1:8000/static/products/the-statement-spine/3.png', media_type: 'image' },
-      { image_url: 'http://127.0.0.1:8000/static/products/the-statement-spine/4.png', media_type: 'image' },
-      { image_url: 'http://127.0.0.1:8000/static/products/the-statement-spine/video.mp4', media_type: 'video' }
+      { image_url: `${API_BASE_URL}/static/products/the-statement-spine/1.png`, media_type: 'image' },
+      { image_url: `${API_BASE_URL}/static/products/the-statement-spine/2.png`, media_type: 'image' },
+      { image_url: `${API_BASE_URL}/static/products/the-statement-spine/3.png`, media_type: 'image' },
+      { image_url: `${API_BASE_URL}/static/products/the-statement-spine/4.png`, media_type: 'image' },
+      { image_url: `${API_BASE_URL}/static/products/the-statement-spine/video.mp4`, media_type: 'video' }
     ],
     variants: [
       { id: '49eb6c21-6452-45e3-8dcd-2d0792a7d1b4', size: 'S', sku: 'TSS-S', stock_quantity: 10 },
@@ -216,18 +218,18 @@ const MOCK_PRODUCTS: Product[] = [
     name: 'Threaded banter',
     slug: 'threaded-banter',
     price: 1399,
-    primary_image_url: 'http://127.0.0.1:8000/static/products/threaded-banter/1.png',
+    primary_image_url: `${API_BASE_URL}/static/products/threaded-banter/1.png`,
     gallery_urls: [
-      'http://127.0.0.1:8000/static/products/threaded-banter/1.png',
-      'http://127.0.0.1:8000/static/products/threaded-banter/2.png',
-      'http://127.0.0.1:8000/static/products/threaded-banter/3.png',
-      'http://127.0.0.1:8000/static/products/threaded-banter/4.png'
+      `${API_BASE_URL}/static/products/threaded-banter/1.png`,
+      `${API_BASE_URL}/static/products/threaded-banter/2.png`,
+      `${API_BASE_URL}/static/products/threaded-banter/3.png`,
+      `${API_BASE_URL}/static/products/threaded-banter/4.png`
     ],
     media: [
-      { image_url: 'http://127.0.0.1:8000/static/products/threaded-banter/1.png', media_type: 'image' },
-      { image_url: 'http://127.0.0.1:8000/static/products/threaded-banter/2.png', media_type: 'image' },
-      { image_url: 'http://127.0.0.1:8000/static/products/threaded-banter/3.png', media_type: 'image' },
-      { image_url: 'http://127.0.0.1:8000/static/products/threaded-banter/4.png', media_type: 'image' }
+      { image_url: `${API_BASE_URL}/static/products/threaded-banter/1.png`, media_type: 'image' },
+      { image_url: `${API_BASE_URL}/static/products/threaded-banter/2.png`, media_type: 'image' },
+      { image_url: `${API_BASE_URL}/static/products/threaded-banter/3.png`, media_type: 'image' },
+      { image_url: `${API_BASE_URL}/static/products/threaded-banter/4.png`, media_type: 'image' }
     ],
     variants: [
       { id: 'ac841602-0336-4afe-8f87-6eb017f55211', size: 'S', sku: 'THB-S', stock_quantity: 20 },
@@ -248,22 +250,22 @@ const MOCK_PRODUCTS: Product[] = [
 const CATEGORIES = [
   {
     title: 'SHIRTS',
-    image: 'http://127.0.0.1:8000/static/products/paper-and-poppy/1.png',
+    image: `${API_BASE_URL}/static/products/paper-and-poppy/1.png`,
     categoryKey: 'Shirts'
   },
   {
     title: 'EMBROIDERED PIECES',
-    image: 'http://127.0.0.1:8000/static/products/threaded-banter/1.png',
+    image: `${API_BASE_URL}/static/products/threaded-banter/1.png`,
     categoryKey: 'Embroidered Pieces'
   },
   {
     title: 'EXCLUSIVE COLLECTIONS',
-    image: 'http://127.0.0.1:8000/static/products/sun-and-script/1.png',
+    image: `${API_BASE_URL}/static/products/sun-and-script/1.png`,
     categoryKey: 'Exclusive Collections'
   },
   {
     title: 'STATEMENT SHIRTS',
-    image: 'http://127.0.0.1:8000/static/products/the-statement-spine/1.png',
+    image: `${API_BASE_URL}/static/products/the-statement-spine/1.png`,
     categoryKey: 'Statement Shirts'
   }
 ];
@@ -393,7 +395,7 @@ export default function App() {
 
     // Fetch full product detail with all media and variants from FastAPI backend
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/v1/products/${product.slug}`);
+      const res = await fetch(`${API_BASE_URL}/api/v1/products/${product.slug}`);
       if (res.ok) {
         const detail = await res.json();
         const gallery = detail.images?.map((img: MediaItem) => img.image_url) || product.gallery_urls;
@@ -421,7 +423,7 @@ export default function App() {
   // Reusable catalog loader that syncs live database variants and stock
   const loadCatalog = async () => {
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/v1/products');
+      const res = await fetch(`${API_BASE_URL}/api/v1/products`);
       if (!res.ok) throw new Error('API request failed');
       const catalog: Product[] = await res.json();
       if (catalog && catalog.length > 0) {
@@ -430,7 +432,7 @@ export default function App() {
           catalog.map(async (prod) => {
             const meta = PRODUCT_METADATA[prod.slug] || {};
             try {
-              const detailRes = await fetch(`http://127.0.0.1:8000/api/v1/products/${prod.slug}`);
+              const detailRes = await fetch(`${API_BASE_URL}/api/v1/products/${prod.slug}`);
               if (detailRes.ok) {
                 const detail = await detailRes.json();
                 const gallery = detail.images?.map((img: MediaItem) => img.image_url) || [prod.primary_image_url];
@@ -804,7 +806,7 @@ export default function App() {
           <section className="relative min-h-[85vh] lg:min-h-[88vh] flex items-center overflow-hidden bg-[#eae3d9]">
             <div className="absolute inset-0 z-0">
               <img 
-                src="http://127.0.0.1:8000/static/products/sun-and-script/1.png" 
+                src={`${API_BASE_URL}/static/products/sun-and-script/1.png`} 
                 alt="Handcrafted Artisanal Embroidered Apparel" 
                 className="w-full h-full object-cover object-center lg:object-[70%_35%]"
               />
@@ -1889,7 +1891,7 @@ export default function App() {
           <div className="lg:col-span-5 flex justify-center lg:justify-end">
             <div className="relative w-full max-w-[420px] aspect-[4/5] rounded-t-[180px] lg:rounded-t-[220px] overflow-hidden border border-[#5c3a2a] shadow-2xl bg-[#2e1a10]">
               <img 
-                src="http://127.0.0.1:8000/static/products/paper-and-poppy/2.png" 
+                src={`${API_BASE_URL}/static/products/paper-and-poppy/2.png`} 
                 alt="Artisanal Handcrafted Apparel Still Life"
                 className="w-full h-full object-cover object-center" 
               />
