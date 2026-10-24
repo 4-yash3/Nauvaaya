@@ -54,7 +54,7 @@ app.add_middleware(
         "http://localhost:5173",
         "http://127.0.0.1:5173",
         "http://localhost:3000",
-        "https://*.vercel.app"   # Permits Vercel preview and production domains
+        "https://nauvaaya.vercel.app"   # Permits Vercel preview and production domains
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -540,7 +540,7 @@ async def admin_upload_image(payload: ImageUploadIn):
         with open(filepath, "wb") as f:
             f.write(file_bytes)
 
-        image_url = f"http://127.0.0.1:8000/static/uploads/{filename}"
+        image_url = f"/static/uploads/{filename}"
         return {"image_url": image_url, "filename": filename}
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Image upload failed: {str(e)}")
