@@ -15,6 +15,7 @@ import {
   LogOut
 } from 'lucide-react';
 import type { OrderDetails, AdminProduct } from '../types';
+import { getImageUrl } from '../utils/imageUrl';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
 
@@ -561,8 +562,8 @@ export const AdminDashboard: React.FC<{ onBackToStore: () => void }> = ({ onBack
                 <div key={prod.id} className="bg-white border border-[#E0D5C7] p-5 shadow-xs flex gap-5 relative group">
                   <div className="relative w-24 h-32 shrink-0 bg-[#FAF7F2] border border-[#E0D5C7] overflow-hidden">
                     {prod.image_url ? (
-                      <img 
-                        src={prod.image_url} 
+                      <img
+                        src={getImageUrl(prod.image_url)} 
                         alt={prod.name} 
                         className="w-full h-full object-cover" 
                       />
@@ -728,8 +729,8 @@ export const AdminDashboard: React.FC<{ onBackToStore: () => void }> = ({ onBack
                 <div className="border-2 border-dashed border-[#D5C7BB] hover:border-[#965438] bg-[#FAF7F2] p-4 transition-colors">
                   {newProd.image_url ? (
                     <div className="flex items-center gap-4">
-                      <img 
-                        src={newProd.image_url} 
+                      <img
+                        src={getImageUrl(newProd.image_url)} 
                         alt="Uploaded preview" 
                         className="w-16 h-20 object-cover border border-[#D5C7BB] bg-white shrink-0 shadow-xs" 
                       />

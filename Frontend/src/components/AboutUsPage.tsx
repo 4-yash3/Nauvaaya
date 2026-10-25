@@ -1,5 +1,6 @@
 import React from 'react';
 import { ArrowRight, Image as ImageIcon } from 'lucide-react';
+import { getImageUrl } from '../utils/imageUrl';
 
 interface AboutUsPageProps {
   onExploreCollection: () => void;
@@ -86,7 +87,7 @@ export const AboutUsPage: React.FC<AboutUsPageProps> = ({
               <div className="relative w-full aspect-[4/5] max-w-[460px] bg-[#EAE3D9] border border-[#D5C7BB] flex flex-col items-center justify-center overflow-hidden group shadow-xs">
                 {ABOUT_IMAGES.heroModel ? (
                   <img 
-                    src={ABOUT_IMAGES.heroModel} 
+                    src={getImageUrl(ABOUT_IMAGES.heroModel)} 
                     alt="Our Craft Hero" 
                     className="w-full h-full object-cover"
                   />
@@ -120,7 +121,7 @@ export const AboutUsPage: React.FC<AboutUsPageProps> = ({
                   <div className="relative aspect-[3/4] bg-[#EAE3D9] border border-[#D5C7BB] flex flex-col items-center justify-center overflow-hidden shadow-xs">
                     {ABOUT_IMAGES.signatureCollar ? (
                       <img 
-                        src={ABOUT_IMAGES.signatureCollar} 
+                        src={getImageUrl(ABOUT_IMAGES.signatureCollar)} 
                         alt="Signature Details" 
                         className="w-full h-full object-cover"
                       />
@@ -152,7 +153,7 @@ export const AboutUsPage: React.FC<AboutUsPageProps> = ({
                   <div className="relative aspect-[3/4] bg-[#EAE3D9] border border-[#D5C7BB] flex flex-col items-center justify-center overflow-hidden shadow-xs">
                     {ABOUT_IMAGES.chairFolded ? (
                       <img 
-                        src={ABOUT_IMAGES.chairFolded} 
+                        src={getImageUrl(ABOUT_IMAGES.chairFolded)} 
                         alt="Artisanal Folded Shirt" 
                         className="w-full h-full object-cover"
                       />
@@ -180,7 +181,7 @@ export const AboutUsPage: React.FC<AboutUsPageProps> = ({
                   <div className="relative aspect-[4/3] bg-[#EAE3D9] border border-[#D5C7BB] flex flex-col items-center justify-center overflow-hidden shadow-xs">
                     {ABOUT_IMAGES.cuffEmbroidery ? (
                       <img 
-                        src={ABOUT_IMAGES.cuffEmbroidery} 
+                        src={getImageUrl(ABOUT_IMAGES.cuffEmbroidery)} 
                         alt="Handcrafted Embroidery Cuff" 
                         className="w-full h-full object-cover"
                       />
@@ -219,7 +220,7 @@ export const AboutUsPage: React.FC<AboutUsPageProps> = ({
                   <div className="relative aspect-[16/9] bg-[#EAE3D9] border border-[#D5C7BB] flex flex-col items-center justify-center overflow-hidden shadow-xs">
                     {ABOUT_IMAGES.backEmbroidery ? (
                       <img 
-                        src={ABOUT_IMAGES.backEmbroidery} 
+                        src={getImageUrl(ABOUT_IMAGES.backEmbroidery)} 
                         alt="Limited Pieces Back Detail" 
                         className="w-full h-full object-cover"
                       />

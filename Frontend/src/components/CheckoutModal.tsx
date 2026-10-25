@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, ShieldCheck, Lock, AlertCircle, Loader2 } from 'lucide-react';
 import type { CartItem, CheckoutFormData, OrderConfirmation } from '../types';
+import { getImageUrl } from '../utils/imageUrl';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
 
@@ -116,8 +117,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
           {cart.map((item) => (
             <div key={item.variant_id} className="py-2 first:pt-0 last:pb-0 flex items-center justify-between text-xs">
               <div className="flex items-center gap-3">
-                <img 
-                  src={item.image_url} 
+                <img
+                  src={getImageUrl(item.image_url)} 
                   alt={item.name} 
                   className="w-8 h-10 object-cover bg-stone-200 border border-[#E0D5C7]" 
                 />

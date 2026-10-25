@@ -35,8 +35,10 @@ import { CheckoutModal } from './components/CheckoutModal';
 import { OrderStatusPage } from './components/OrderStatusPage';
 import { AboutUsPage } from './components/AboutUsPage';
 import { AdminDashboard } from './components/AdminDashboard';
+import { getImageUrl } from './utils/imageUrl';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
+const SUPABASE_STORAGE_URL = 'https://vujpzldubtgaikeawidk.supabase.co/storage/v1/object/public/Products';
 
 // Curated artisan metadata mapping for the database products
 const PRODUCT_METADATA: Record<string, Partial<Product>> = {
@@ -84,18 +86,18 @@ const MOCK_PRODUCTS: Product[] = [
     name: 'Sun and Script',
     slug: 'sun-and-script',
     price: 1499,
-    primary_image_url: `${API_BASE_URL}/static/products/sun-and-script/1.png`,
+    primary_image_url: `${SUPABASE_STORAGE_URL}/sun-and-script/1.png`,
     gallery_urls: [
-      `${API_BASE_URL}/static/products/sun-and-script/1.png`,
-      `${API_BASE_URL}/static/products/sun-and-script/2.png`,
-      `${API_BASE_URL}/static/products/sun-and-script/3.png`,
-      `${API_BASE_URL}/static/products/sun-and-script/4.png`
+      `${SUPABASE_STORAGE_URL}/sun-and-script/1.png`,
+      `${SUPABASE_STORAGE_URL}/sun-and-script/2.png`,
+      `${SUPABASE_STORAGE_URL}/sun-and-script/3.png`,
+      `${SUPABASE_STORAGE_URL}/sun-and-script/4.png`
     ],
     media: [
-      { image_url: `${API_BASE_URL}/static/products/sun-and-script/1.png`, media_type: 'image' },
-      { image_url: `${API_BASE_URL}/static/products/sun-and-script/2.png`, media_type: 'image' },
-      { image_url: `${API_BASE_URL}/static/products/sun-and-script/3.png`, media_type: 'image' },
-      { image_url: `${API_BASE_URL}/static/products/sun-and-script/4.png`, media_type: 'image' }
+      { image_url: `${SUPABASE_STORAGE_URL}/sun-and-script/1.png`, media_type: 'image' },
+      { image_url: `${SUPABASE_STORAGE_URL}/sun-and-script/2.png`, media_type: 'image' },
+      { image_url: `${SUPABASE_STORAGE_URL}/sun-and-script/3.png`, media_type: 'image' },
+      { image_url: `${SUPABASE_STORAGE_URL}/sun-and-script/4.png`, media_type: 'image' }
     ],
     variants: [
       { id: 'fda95c1c-263b-48fe-add7-c92662421133', size: 'S', sku: 'SAS-S', stock_quantity: 15 },
@@ -116,20 +118,20 @@ const MOCK_PRODUCTS: Product[] = [
     name: 'Paper and Poppy',
     slug: 'paper-and-poppy',
     price: 1499,
-    primary_image_url: `${API_BASE_URL}/static/products/paper-and-poppy/1.png`,
+    primary_image_url: `${SUPABASE_STORAGE_URL}/paper-and-poppy/1.png`,
     gallery_urls: [
-      `${API_BASE_URL}/static/products/paper-and-poppy/1.png`,
-      `${API_BASE_URL}/static/products/paper-and-poppy/2.png`,
-      `${API_BASE_URL}/static/products/paper-and-poppy/3.png`,
-      `${API_BASE_URL}/static/products/paper-and-poppy/4.png`,
-      `${API_BASE_URL}/static/products/paper-and-poppy/video.mp4`
+      `${SUPABASE_STORAGE_URL}/paper-and-poppy/1.png`,
+      `${SUPABASE_STORAGE_URL}/paper-and-poppy/2.png`,
+      `${SUPABASE_STORAGE_URL}/paper-and-poppy/3.png`,
+      `${SUPABASE_STORAGE_URL}/paper-and-poppy/4.png`,
+      `${SUPABASE_STORAGE_URL}/paper-and-poppy/video.mp4`
     ],
     media: [
-      { image_url: `${API_BASE_URL}/static/products/paper-and-poppy/1.png`, media_type: 'image' },
-      { image_url: `${API_BASE_URL}/static/products/paper-and-poppy/2.png`, media_type: 'image' },
-      { image_url: `${API_BASE_URL}/static/products/paper-and-poppy/3.png`, media_type: 'image' },
-      { image_url: `${API_BASE_URL}/static/products/paper-and-poppy/4.png`, media_type: 'image' },
-      { image_url: `${API_BASE_URL}/static/products/paper-and-poppy/video.mp4`, media_type: 'video' }
+      { image_url: `${SUPABASE_STORAGE_URL}/paper-and-poppy/1.png`, media_type: 'image' },
+      { image_url: `${SUPABASE_STORAGE_URL}/paper-and-poppy/2.png`, media_type: 'image' },
+      { image_url: `${SUPABASE_STORAGE_URL}/paper-and-poppy/3.png`, media_type: 'image' },
+      { image_url: `${SUPABASE_STORAGE_URL}/paper-and-poppy/4.png`, media_type: 'image' },
+      { image_url: `${SUPABASE_STORAGE_URL}/paper-and-poppy/video.mp4`, media_type: 'video' }
     ],
     variants: [
       { id: '96e32176-c07a-4654-85b0-49c2137af444', size: 'S', sku: 'PAP-S', stock_quantity: 15 },
@@ -150,20 +152,20 @@ const MOCK_PRODUCTS: Product[] = [
     name: 'The back story Edit',
     slug: 'the-back-story-edit',
     price: 1699,
-    primary_image_url: `${API_BASE_URL}/static/products/the-back-story-edit/1.png`,
+    primary_image_url: `${SUPABASE_STORAGE_URL}/the-back-story-edit/1.png`,
     gallery_urls: [
-      `${API_BASE_URL}/static/products/the-back-story-edit/1.png`,
-      `${API_BASE_URL}/static/products/the-back-story-edit/2.png`,
-      `${API_BASE_URL}/static/products/the-back-story-edit/3.png`,
-      `${API_BASE_URL}/static/products/the-back-story-edit/4.png`,
-      `${API_BASE_URL}/static/products/the-back-story-edit/video.mp4`
+      `${SUPABASE_STORAGE_URL}/the-back-story-edit/1.png`,
+      `${SUPABASE_STORAGE_URL}/the-back-story-edit/2.png`,
+      `${SUPABASE_STORAGE_URL}/the-back-story-edit/3.png`,
+      `${SUPABASE_STORAGE_URL}/the-back-story-edit/4.png`,
+      `${SUPABASE_STORAGE_URL}/the-back-story-edit/video.mp4`
     ],
     media: [
-      { image_url: `${API_BASE_URL}/static/products/the-back-story-edit/1.png`, media_type: 'image' },
-      { image_url: `${API_BASE_URL}/static/products/the-back-story-edit/2.png`, media_type: 'image' },
-      { image_url: `${API_BASE_URL}/static/products/the-back-story-edit/3.png`, media_type: 'image' },
-      { image_url: `${API_BASE_URL}/static/products/the-back-story-edit/4.png`, media_type: 'image' },
-      { image_url: `${API_BASE_URL}/static/products/the-back-story-edit/video.mp4`, media_type: 'video' }
+      { image_url: `${SUPABASE_STORAGE_URL}/the-back-story-edit/1.png`, media_type: 'image' },
+      { image_url: `${SUPABASE_STORAGE_URL}/the-back-story-edit/2.png`, media_type: 'image' },
+      { image_url: `${SUPABASE_STORAGE_URL}/the-back-story-edit/3.png`, media_type: 'image' },
+      { image_url: `${SUPABASE_STORAGE_URL}/the-back-story-edit/4.png`, media_type: 'image' },
+      { image_url: `${SUPABASE_STORAGE_URL}/the-back-story-edit/video.mp4`, media_type: 'video' }
     ],
     variants: [
       { id: '511f553f-c373-41f1-845c-4062910c645f', size: 'S', sku: 'BSE-S', stock_quantity: 12 },
@@ -184,20 +186,20 @@ const MOCK_PRODUCTS: Product[] = [
     name: 'The statement Spine',
     slug: 'the-statement-spine',
     price: 1599,
-    primary_image_url: `${API_BASE_URL}/static/products/the-statement-spine/1.png`,
+    primary_image_url: `${SUPABASE_STORAGE_URL}/the-statement-spine/1.png`,
     gallery_urls: [
-      `${API_BASE_URL}/static/products/the-statement-spine/1.png`,
-      `${API_BASE_URL}/static/products/the-statement-spine/2.png`,
-      `${API_BASE_URL}/static/products/the-statement-spine/3.png`,
-      `${API_BASE_URL}/static/products/the-statement-spine/4.png`,
-      `${API_BASE_URL}/static/products/the-statement-spine/video.mp4`
+      `${SUPABASE_STORAGE_URL}/the-statement-spine/1.png`,
+      `${SUPABASE_STORAGE_URL}/the-statement-spine/2.png`,
+      `${SUPABASE_STORAGE_URL}/the-statement-spine/3.png`,
+      `${SUPABASE_STORAGE_URL}/the-statement-spine/4.png`,
+      `${SUPABASE_STORAGE_URL}/the-statement-spine/video.mp4`
     ],
     media: [
-      { image_url: `${API_BASE_URL}/static/products/the-statement-spine/1.png`, media_type: 'image' },
-      { image_url: `${API_BASE_URL}/static/products/the-statement-spine/2.png`, media_type: 'image' },
-      { image_url: `${API_BASE_URL}/static/products/the-statement-spine/3.png`, media_type: 'image' },
-      { image_url: `${API_BASE_URL}/static/products/the-statement-spine/4.png`, media_type: 'image' },
-      { image_url: `${API_BASE_URL}/static/products/the-statement-spine/video.mp4`, media_type: 'video' }
+      { image_url: `${SUPABASE_STORAGE_URL}/the-statement-spine/1.png`, media_type: 'image' },
+      { image_url: `${SUPABASE_STORAGE_URL}/the-statement-spine/2.png`, media_type: 'image' },
+      { image_url: `${SUPABASE_STORAGE_URL}/the-statement-spine/3.png`, media_type: 'image' },
+      { image_url: `${SUPABASE_STORAGE_URL}/the-statement-spine/4.png`, media_type: 'image' },
+      { image_url: `${SUPABASE_STORAGE_URL}/the-statement-spine/video.mp4`, media_type: 'video' }
     ],
     variants: [
       { id: '49eb6c21-6452-45e3-8dcd-2d0792a7d1b4', size: 'S', sku: 'TSS-S', stock_quantity: 10 },
@@ -218,18 +220,18 @@ const MOCK_PRODUCTS: Product[] = [
     name: 'Threaded banter',
     slug: 'threaded-banter',
     price: 1399,
-    primary_image_url: `${API_BASE_URL}/static/products/threaded-banter/1.png`,
+    primary_image_url: `${SUPABASE_STORAGE_URL}/threaded-banter/1.png`,
     gallery_urls: [
-      `${API_BASE_URL}/static/products/threaded-banter/1.png`,
-      `${API_BASE_URL}/static/products/threaded-banter/2.png`,
-      `${API_BASE_URL}/static/products/threaded-banter/3.png`,
-      `${API_BASE_URL}/static/products/threaded-banter/4.png`
+      `${SUPABASE_STORAGE_URL}/threaded-banter/1.png`,
+      `${SUPABASE_STORAGE_URL}/threaded-banter/2.png`,
+      `${SUPABASE_STORAGE_URL}/threaded-banter/3.png`,
+      `${SUPABASE_STORAGE_URL}/threaded-banter/4.png`
     ],
     media: [
-      { image_url: `${API_BASE_URL}/static/products/threaded-banter/1.png`, media_type: 'image' },
-      { image_url: `${API_BASE_URL}/static/products/threaded-banter/2.png`, media_type: 'image' },
-      { image_url: `${API_BASE_URL}/static/products/threaded-banter/3.png`, media_type: 'image' },
-      { image_url: `${API_BASE_URL}/static/products/threaded-banter/4.png`, media_type: 'image' }
+      { image_url: `${SUPABASE_STORAGE_URL}/threaded-banter/1.png`, media_type: 'image' },
+      { image_url: `${SUPABASE_STORAGE_URL}/threaded-banter/2.png`, media_type: 'image' },
+      { image_url: `${SUPABASE_STORAGE_URL}/threaded-banter/3.png`, media_type: 'image' },
+      { image_url: `${SUPABASE_STORAGE_URL}/threaded-banter/4.png`, media_type: 'image' }
     ],
     variants: [
       { id: 'ac841602-0336-4afe-8f87-6eb017f55211', size: 'S', sku: 'THB-S', stock_quantity: 20 },
@@ -250,22 +252,22 @@ const MOCK_PRODUCTS: Product[] = [
 const CATEGORIES = [
   {
     title: 'SHIRTS',
-    image: `${API_BASE_URL}/static/products/paper-and-poppy/1.png`,
+    image: `${SUPABASE_STORAGE_URL}/paper-and-poppy/1.png`,
     categoryKey: 'Shirts'
   },
   {
     title: 'EMBROIDERED PIECES',
-    image: `${API_BASE_URL}/static/products/threaded-banter/1.png`,
+    image: `${SUPABASE_STORAGE_URL}/threaded-banter/1.png`,
     categoryKey: 'Embroidered Pieces'
   },
   {
     title: 'EXCLUSIVE COLLECTIONS',
-    image: `${API_BASE_URL}/static/products/sun-and-script/1.png`,
+    image: `${SUPABASE_STORAGE_URL}/sun-and-script/1.png`,
     categoryKey: 'Exclusive Collections'
   },
   {
     title: 'STATEMENT SHIRTS',
-    image: `${API_BASE_URL}/static/products/the-statement-spine/1.png`,
+    image: `${SUPABASE_STORAGE_URL}/the-statement-spine/1.png`,
     categoryKey: 'Statement Shirts'
   }
 ];
@@ -806,7 +808,7 @@ export default function App() {
           <section className="relative min-h-[85vh] lg:min-h-[88vh] flex items-center overflow-hidden bg-[#eae3d9]">
             <div className="absolute inset-0 z-0">
               <img 
-                src={`${API_BASE_URL}/static/products/sun-and-script/1.png`} 
+                src={getImageUrl(`${SUPABASE_STORAGE_URL}/sun-and-script/1.png`)} 
                 alt="Handcrafted Artisanal Embroidered Apparel" 
                 className="w-full h-full object-cover object-center lg:object-[70%_35%]"
               />
@@ -909,8 +911,8 @@ export default function App() {
                   onClick={() => navigateTo('shop', cat.categoryKey)}
                   className="group relative h-64 sm:h-72 lg:h-80 overflow-hidden cursor-pointer bg-[#e9e2d8]"
                 >
-                  <img 
-                    src={cat.image} 
+                  <img
+                    src={getImageUrl(cat.image)} 
                     alt={cat.title} 
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" 
                   />
@@ -965,7 +967,7 @@ export default function App() {
                 >
                   <div className="relative aspect-[3/4] bg-[#e9e2d8] overflow-hidden mb-3.5 border border-[#e2d8cc]">
                     <img 
-                      src={shirt.primary_image_url || MOCK_PRODUCTS[0].primary_image_url} 
+                      src={getImageUrl(shirt.primary_image_url || MOCK_PRODUCTS[0].primary_image_url)} 
                       alt={shirt.name} 
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                     />
@@ -1189,7 +1191,7 @@ export default function App() {
                 >
                   <div className="relative aspect-[3/4] bg-[#e9e2d8] overflow-hidden mb-3.5 border border-[#e2d8cc]">
                     <img 
-                      src={shirt.primary_image_url || MOCK_PRODUCTS[0].primary_image_url} 
+                      src={getImageUrl(shirt.primary_image_url || MOCK_PRODUCTS[0].primary_image_url)} 
                       alt={shirt.name} 
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                     />
@@ -1357,9 +1359,9 @@ export default function App() {
               {/* Main Media Display (Reduced height so it fits within viewport without scrolling) */}
               <div className="relative w-full max-w-[500px] aspect-[4/5] max-h-[68vh] bg-[#ede5dc] overflow-hidden border border-[#e4dcce] shadow-xs flex items-center justify-center group select-none">
                 {activeMediaItem?.media_type === 'video' ? (
-                  <video 
+                  <video
                     key={activeMediaItem.image_url}
-                    src={activeMediaItem.image_url} 
+                    src={getImageUrl(activeMediaItem.image_url)} 
                     controls 
                     autoPlay 
                     muted 
@@ -1370,7 +1372,7 @@ export default function App() {
                 ) : (
                   <img 
                     key={activeMediaItem?.image_url}
-                    src={activeMediaItem?.image_url || selectedProduct.primary_image_url} 
+                    src={getImageUrl(activeMediaItem?.image_url || selectedProduct.primary_image_url)} 
                     alt={selectedProduct.name}
                     className="w-full h-full object-cover object-top transition-all duration-300"
                   />
@@ -1455,7 +1457,7 @@ export default function App() {
                           <span className="text-[8px] uppercase tracking-wider mt-0.5 font-bold">REEL</span>
                         </div>
                       ) : (
-                        <img src={m.image_url} alt={`View ${gIdx + 1}`} className="w-full h-full object-cover" />
+                        <img src={getImageUrl(m.image_url)} alt={`View ${gIdx + 1}`} className="w-full h-full object-cover" />
                       )}
                     </button>
                   ))}
@@ -1758,8 +1760,8 @@ export default function App() {
                   onClick={() => openProductPage(shirt)}
                 >
                   <div className="relative aspect-[3/4] bg-[#e9e2d8] overflow-hidden mb-3.5 border border-[#e2d8cc]">
-                    <img 
-                      src={shirt.primary_image_url} 
+                    <img
+                      src={getImageUrl(shirt.primary_image_url)}
                       alt={shirt.name} 
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                     />
@@ -1891,7 +1893,7 @@ export default function App() {
           <div className="lg:col-span-5 flex justify-center lg:justify-end">
             <div className="relative w-full max-w-[420px] aspect-[4/5] rounded-t-[180px] lg:rounded-t-[220px] overflow-hidden border border-[#5c3a2a] shadow-2xl bg-[#2e1a10]">
               <img 
-                src={`${API_BASE_URL}/static/products/paper-and-poppy/2.png`} 
+                src={getImageUrl(`${SUPABASE_STORAGE_URL}/paper-and-poppy/2.png`)} 
                 alt="Artisanal Handcrafted Apparel Still Life"
                 className="w-full h-full object-cover object-center" 
               />
@@ -2201,7 +2203,7 @@ export default function App() {
               ) : (
                 cart.map((item) => (
                   <div key={item.variant_id} className="flex gap-4 pb-4 border-b border-[#f0eae1]">
-                    <img src={item.image_url} alt={item.name} className="w-20 h-24 object-cover bg-[#e9e2d8]" />
+                    <img src={getImageUrl(item.image_url)} alt={item.name} className="w-20 h-24 object-cover bg-[#e9e2d8]" />
                     <div className="flex-1 flex flex-col justify-between">
                       <div>
                         <h4 className="font-serif text-sm font-medium">{item.name}</h4>
