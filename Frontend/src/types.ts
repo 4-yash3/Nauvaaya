@@ -111,5 +111,6 @@ export interface AdminProduct {
   price: number;
   image_url: string;
   variants: AdminVariant[];
+  media?: MediaItem[];
 }
 

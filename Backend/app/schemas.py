@@ -123,12 +123,20 @@ class ProductVariantCreate(BaseModel):
     stock_quantity: int
 
 
+class ProductMediaItemCreate(BaseModel):
+    image_url: str
+    media_type: str = "image"  # 'image' or 'video'
+    is_primary: bool = False
+    display_order: int = 1
+
+
 class ProductCreateIn(BaseModel):
     name: str
     slug: str
     description: str
     price: float
-    image_url: str
+    image_url: Optional[str] = ""
+    media: Optional[List[ProductMediaItemCreate]] = None
     variants: List[ProductVariantCreate]
 
 
@@ -159,12 +167,20 @@ class ProductVariantCreate(BaseModel):
     stock_quantity: int
 
 
+class ProductMediaItemCreate(BaseModel):
+    image_url: str
+    media_type: str = "image"  # 'image' or 'video'
+    is_primary: bool = False
+    display_order: int = 1
+
+
 class ProductCreateIn(BaseModel):
     name: str
     slug: str
     description: str
     price: float
-    image_url: str
+    image_url: Optional[str] = ""
+    media: Optional[List[ProductMediaItemCreate]] = None
     variants: List[ProductVariantCreate]
 
 

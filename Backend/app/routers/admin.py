@@ -3,17 +3,15 @@ import hashlib
 import hmac
 import os
 import time
-from pathlib import Path
 from typing import List
-from uuid import UUID, uuid4
+from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.auth import ADMIN_JWT_SECRET, get_approved_admins, verify_admin_token
-from app.config import STATIC_DIR
 from app.database import get_db
 from app.models import Order, Product, ProductImage, ProductVariant
 from app.schemas import (
@@ -24,6 +22,7 @@ from app.schemas import (
     ProductCreateIn,
     StockUpdateIn,
 )
+from app.services.storage import upload_bytes_to_supabase, upload_file_to_supabase
 
 router = APIRouter(prefix="/api/v1/admin", tags=["Admin"])
 
@@ -95,7 +94,7 @@ async def admin_update_order_status(
 
 @router.get("/products", dependencies=[Depends(verify_admin_token)])
 async def admin_get_products(db: AsyncSession = Depends(get_db)):
-    """Fetch all active products with variants and stock counts for admin."""
+    """Fetch all active products with variants, images and stock counts for admin."""
     stmt = (
         select(Product)
         .where(Product.is_active == True)
@@ -121,6 +120,16 @@ async def admin_get_products(db: AsyncSession = Depends(get_db)):
             "variants": [
                 {"id": str(v.id), "size": v.size, "stock_quantity": v.stock_quantity}
                 for v in p.variants
+            ],
+            "media": [
+                {
+                    "id": str(img.id),
+                    "image_url": img.image_url,
+                    "is_primary": img.is_primary,
+                    "media_type": img.media_type,
+                    "display_order": img.display_order
+                }
+                for img in p.images
             ]
         })
     return out
@@ -150,7 +159,7 @@ async def admin_create_product(
     payload: ProductCreateIn,
     db: AsyncSession = Depends(get_db)
 ):
-    """Add a new artisanal garment and assign size variants."""
+    """Add a new artisanal garment and assign size variants & multiple photos/videos."""
     stmt = select(Product).where(Product.slug == payload.slug)
     res = await db.execute(stmt)
     if res.scalar_one_or_none():
@@ -165,7 +174,20 @@ async def admin_create_product(
     db.add(new_product)
     await db.flush()
 
-    if payload.image_url:
+    # Save multiple photos and videos if provided
+    if payload.media and len(payload.media) > 0:
+        has_primary = any(m.is_primary for m in payload.media)
+        for idx, m in enumerate(payload.media):
+            is_prim = m.is_primary or (not has_primary and idx == 0)
+            img = ProductImage(
+                product_id=new_product.id,
+                image_url=m.image_url,
+                is_primary=is_prim,
+                display_order=m.display_order if m.display_order else (idx + 1),
+                media_type=m.media_type or "image"
+            )
+            db.add(img)
+    elif payload.image_url:
         img = ProductImage(
             product_id=new_product.id,
             image_url=payload.image_url,
@@ -216,9 +238,36 @@ async def admin_delete_product(
         return {"message": "Product archived from catalog", "product_id": str(product_id)}
 
 
+@router.post("/upload", dependencies=[Depends(verify_admin_token)])
+@router.post("/upload-file", dependencies=[Depends(verify_admin_token)])
+async def admin_upload(file: UploadFile = File(...)):
+    """
+    Upload product image or video directly to Supabase Storage Products bucket.
+    Returns permanent public URL: {"image_url": public_url, "media_type": media_type, "filename": filename}
+    """
+    public_url = await upload_file_to_supabase(file, folder="products")
+
+    content_type = file.content_type or ""
+    filename = file.filename or ""
+    is_video = (
+        content_type.startswith("video/")
+        or filename.lower().endswith((".mp4", ".mov", ".webm", ".avi", ".mkv"))
+    )
+    media_type = "video" if is_video else "image"
+
+    return {
+        "image_url": public_url,
+        "media_type": media_type,
+        "filename": filename
+    }
+
+
 @router.post("/upload-image", dependencies=[Depends(verify_admin_token)])
 async def admin_upload_image(payload: ImageUploadIn):
-    """Upload product image file directly from admin dashboard."""
+    """
+    Backwards-compatible base64 upload endpoint.
+    Uploads directly to Supabase Storage Products bucket rather than local disk.
+    """
     try:
         raw_data = payload.image_data
         if "," in raw_data:
@@ -229,29 +278,31 @@ async def admin_upload_image(payload: ImageUploadIn):
 
         file_bytes = base64.b64decode(encoded)
 
-        ext = ".jpg"
+        content_type = "image/jpeg"
         lower_name = payload.filename.lower()
         if "image/png" in header or lower_name.endswith(".png"):
-            ext = ".png"
+            content_type = "image/png"
         elif "image/webp" in header or lower_name.endswith(".webp"):
-            ext = ".webp"
+            content_type = "image/webp"
         elif "image/gif" in header or lower_name.endswith(".gif"):
-            ext = ".gif"
-        elif "image/jpeg" in header or lower_name.endswith((".jpg", ".jpeg")):
-            ext = ".jpg"
+            content_type = "image/gif"
+        elif "video/mp4" in header or lower_name.endswith(".mp4"):
+            content_type = "video/mp4"
 
-        upload_dir = STATIC_DIR / "uploads"
-        upload_dir.mkdir(parents=True, exist_ok=True)
+        is_video = content_type.startswith("video/") or lower_name.endswith((".mp4", ".mov", ".webm"))
+        media_type = "video" if is_video else "image"
 
-        clean_stem = "".join(c for c in Path(payload.filename).stem if c.isalnum() or c in "-_")[:20]
-        filename = f"{uuid4().hex[:8]}_{clean_stem or 'photo'}{ext}"
-        filepath = upload_dir / filename
+        public_url = await upload_bytes_to_supabase(
+            file_bytes=file_bytes,
+            filename=payload.filename,
+            content_type=content_type,
+            folder="products"
+        )
 
-        with open(filepath, "wb") as f:
-            f.write(file_bytes)
-
-        image_url = f"/static/uploads/{filename}"
-        return {"image_url": image_url, "filename": filename}
+        return {
+            "image_url": public_url,
+            "media_type": media_type,
+            "filename": payload.filename
+        }
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Image upload failed: {str(e)}")
-

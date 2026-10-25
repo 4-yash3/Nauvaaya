@@ -26,7 +26,7 @@ TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN", "").strip()
 TWILIO_WHATSAPP_NUMBER = os.getenv("TWILIO_WHATSAPP_NUMBER", "whatsapp:+14155238886").strip()
 
 # Startup confirmation
-print(f"📧 [NOTIFICATION ENGINE] SMTP loaded for: '{SMTP_USER}' from {ENV_PATH}")
+print(f"[NOTIFICATION] [NOTIFICATION ENGINE] SMTP loaded for: '{SMTP_USER}' from {ENV_PATH}")
 
 EMAIL_TEMPLATE = """
 <!DOCTYPE html>

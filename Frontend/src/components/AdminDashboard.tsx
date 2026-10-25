@@ -12,9 +12,10 @@ import {
   Mail,
   KeyRound,
   AlertCircle,
-  LogOut
+  LogOut,
+  Video
 } from 'lucide-react';
-import type { OrderDetails, AdminProduct } from '../types';
+import type { OrderDetails, AdminProduct, MediaItem } from '../types';
 import { getImageUrl } from '../utils/imageUrl';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
@@ -37,8 +38,12 @@ export const AdminDashboard: React.FC<{ onBackToStore: () => void }> = ({ onBack
   const [isLoading, setIsLoading] = useState(false);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
 
-  // Image Upload State
+  // Media Assets & Upload State
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<string | null>(null);
+  const [mediaList, setMediaList] = useState<MediaItem[]>([]);
+  const [customMediaUrl, setCustomMediaUrl] = useState('');
+  const [customMediaType, setCustomMediaType] = useState<'image' | 'video'>('image');
   const [, setUploadPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -85,7 +90,8 @@ export const AdminDashboard: React.FC<{ onBackToStore: () => void }> = ({ onBack
         const normalized = (data || []).map((p: any) => ({
           ...p,
           image_url: p.image_url || p.primary_image_url || '',
-          variants: p.variants || []
+          variants: p.variants || [],
+          media: p.media || []
         }));
         setProducts(normalized);
       }
@@ -210,50 +216,116 @@ export const AdminDashboard: React.FC<{ onBackToStore: () => void }> = ({ onBack
     }
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
-    const reader = new FileReader();
-    reader.onload = async () => {
-      const base64Data = reader.result as string;
-      setUploadPreview(base64Data);
-      setUploadingImage(true);
+    setUploadingImage(true);
+    const totalFiles = files.length;
+    let successCount = 0;
+    const newItems: MediaItem[] = [];
+
+    for (let i = 0; i < totalFiles; i++) {
+      const file = files[i];
+      setUploadProgress(`Uploading ${i + 1} of ${totalFiles}: ${file.name}...`);
+
       try {
-        const res = await fetch(`${API_BASE_URL}/api/v1/admin/upload-image`, {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const res = await fetch(`${API_BASE_URL}/api/v1/admin/upload`, {
           method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'X-Admin-Token': adminToken 
+          headers: {
+            'X-Admin-Token': adminToken
           },
-          body: JSON.stringify({
-            filename: file.name,
-            image_data: base64Data
-          })
+          body: formData
         });
+
         if (!res.ok) {
           const errData = await res.json().catch(() => ({}));
-          throw new Error(errData.detail || 'Failed to upload photo');
+          throw new Error(errData.detail || `Failed to upload ${file.name}`);
         }
+
         const data = await res.json();
-        setNewProd(p => ({ ...p, image_url: data.image_url }));
-        setActionMessage(`Photo "${file.name}" uploaded successfully!`);
-        setTimeout(() => setActionMessage(null), 3000);
+        const isVideo = data.media_type === 'video' || file.type.startsWith('video/') || !!file.name.match(/\.(mp4|mov|webm)$/i);
+        newItems.push({
+          image_url: data.image_url,
+          media_type: isVideo ? 'video' : 'image',
+          is_primary: false,
+          display_order: mediaList.length + newItems.length + 1
+        });
+        successCount++;
       } catch (err: any) {
-        alert(err.message || 'Image upload failed');
-      } finally {
-        setUploadingImage(false);
+        console.error(err);
+        alert(err.message || `Failed to upload ${file.name}`);
       }
+    }
+
+    if (newItems.length > 0) {
+      setMediaList(prev => {
+        const combined = [...prev, ...newItems];
+        if (!combined.some(m => m.is_primary)) {
+          combined[0].is_primary = true;
+        }
+        return combined;
+      });
+      setActionMessage(`Uploaded ${successCount} file(s) to Supabase Storage!`);
+      setTimeout(() => setActionMessage(null), 3000);
+    }
+
+    setUploadingImage(false);
+    setUploadProgress(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleAddMediaUrl = () => {
+    const url = customMediaUrl.trim();
+    if (!url) return;
+
+    const newItem: MediaItem = {
+      image_url: url,
+      media_type: customMediaType,
+      is_primary: mediaList.length === 0,
+      display_order: mediaList.length + 1
     };
-    reader.readAsDataURL(file);
+
+    setMediaList(prev => {
+      const next = [...prev, newItem];
+      if (!next.some(m => m.is_primary)) {
+        next[0].is_primary = true;
+      }
+      return next;
+    });
+
+    setCustomMediaUrl('');
+  };
+
+  const handleSetPrimaryMedia = (index: number) => {
+    setMediaList(prev => prev.map((item, idx) => ({
+      ...item,
+      is_primary: idx === index
+    })));
+  };
+
+  const handleRemoveMedia = (index: number) => {
+    setMediaList(prev => {
+      const updated = prev.filter((_, idx) => idx !== index);
+      if (updated.length > 0 && !updated.some(m => m.is_primary)) {
+        updated[0].is_primary = true;
+      }
+      return updated;
+    });
   };
 
   const handleCreateProduct = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newProd.image_url) {
-      alert("Please upload a product photo or provide an image URL.");
+    if (mediaList.length === 0 && !newProd.image_url) {
+      alert("Please upload at least one product photo or video, or provide a media URL.");
       return;
     }
+
+    const primaryItem = mediaList.find(m => m.is_primary) || mediaList[0];
+    const primaryUrl = primaryItem ? primaryItem.image_url : newProd.image_url;
 
     try {
       const payload = {
@@ -261,7 +333,13 @@ export const AdminDashboard: React.FC<{ onBackToStore: () => void }> = ({ onBack
         slug: newProd.slug.toLowerCase().replace(/\s+/g, '-'),
         description: newProd.description,
         price: parseFloat(newProd.price),
-        image_url: newProd.image_url,
+        image_url: primaryUrl,
+        media: mediaList.map((m, idx) => ({
+          image_url: m.image_url,
+          media_type: m.media_type || 'image',
+          is_primary: m.is_primary || (idx === 0 && !mediaList.some(x => x.is_primary)),
+          display_order: idx + 1
+        })),
         variants: [
           { size: 'S', stock_quantity: parseInt(newProd.s_stock) || 0 },
           { size: 'M', stock_quantity: parseInt(newProd.m_stock) || 0 },
@@ -283,12 +361,13 @@ export const AdminDashboard: React.FC<{ onBackToStore: () => void }> = ({ onBack
         throw new Error(err.detail || "Could not create product");
       }
 
-      setActionMessage(`Piece "${newProd.name}" added to catalog.`);
+      setActionMessage(`Piece "${newProd.name}" added to catalog with ${mediaList.length} media asset(s).`);
       setActiveTab('inventory');
       setNewProd({
         name: '', slug: '', description: '', price: '', image_url: '',
         s_stock: '10', m_stock: '15', l_stock: '10'
       });
+      setMediaList([]);
       setUploadPreview(null);
       loadData();
     } catch (err: any) {
@@ -598,6 +677,11 @@ export const AdminDashboard: React.FC<{ onBackToStore: () => void }> = ({ onBack
                               IN STOCK
                             </span>
                           )}
+                          {prod.media && prod.media.length > 0 && (
+                            <span className="text-[10px] text-stone-500 font-mono flex items-center gap-1">
+                              • {prod.media.length} media{prod.media.some(m => m.media_type === 'video') ? ' (incl. video)' : ''}
+                            </span>
+                          )}
                         </div>
                       </div>
 
@@ -720,88 +804,178 @@ export const AdminDashboard: React.FC<{ onBackToStore: () => void }> = ({ onBack
                 </div>
               </div>
 
-              {/* Product Photo Upload + URL input */}
+              {/* Product Photos & Videos Upload to Supabase */}
               <div>
-                <label className="block text-[11px] font-medium tracking-wider uppercase text-stone-700 mb-1">
-                  Product Image *
-                </label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-[11px] font-medium tracking-wider uppercase text-stone-700">
+                    Product Photos & Videos *
+                  </label>
+                  <span className="text-[10px] text-stone-500 font-mono">
+                    {mediaList.length} asset{mediaList.length === 1 ? '' : 's'} added
+                  </span>
+                </div>
 
-                <div className="border-2 border-dashed border-[#D5C7BB] hover:border-[#965438] bg-[#FAF7F2] p-4 transition-colors">
-                  {newProd.image_url ? (
-                    <div className="flex items-center gap-4">
-                      <img
-                        src={getImageUrl(newProd.image_url)} 
-                        alt="Uploaded preview" 
-                        className="w-16 h-20 object-cover border border-[#D5C7BB] bg-white shrink-0 shadow-xs" 
-                      />
-                      <div className="flex-1 min-w-0">
-                        <span className="text-xs font-medium text-stone-900 block truncate font-mono">
-                          {newProd.image_url}
-                        </span>
-                        <span className="text-[11px] text-emerald-700 flex items-center gap-1 mt-0.5">
-                          <Check className="w-3.5 h-3.5" /> Photo attached to piece
-                        </span>
-                        <div className="flex items-center gap-3 mt-2 text-xs">
-                          <button
-                            type="button"
-                            onClick={() => fileInputRef.current?.click()}
-                            className="text-[#965438] hover:underline font-medium cursor-pointer"
-                          >
-                            Change Photo
-                          </button>
-                          <span className="text-stone-300">|</span>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setNewProd(p => ({ ...p, image_url: '' }));
-                              setUploadPreview(null);
-                            }}
-                            className="text-red-600 hover:underline cursor-pointer"
-                          >
-                            Remove
-                          </button>
-                        </div>
-                      </div>
+                {/* Upload Box */}
+                <div className="border-2 border-dashed border-[#D5C7BB] hover:border-[#965438] bg-[#FAF7F2] p-5 text-center transition-colors">
+                  <div className="flex flex-col items-center justify-center">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Upload className="w-5 h-5 text-stone-400 stroke-[1.5]" />
+                      <ImageIcon className="w-5 h-5 text-stone-400 stroke-[1.5]" />
+                      <span className="text-stone-300">/</span>
+                      <Video className="w-5 h-5 text-stone-400 stroke-[1.5]" />
                     </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center py-5 text-center">
-                      <Upload className="w-7 h-7 text-stone-400 mb-2 stroke-[1.5]" />
-                      <button
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={uploadingImage}
-                        className="bg-white border border-[#D5C7BB] hover:border-[#965438] text-stone-800 text-xs px-5 py-2 font-medium uppercase tracking-wider transition cursor-pointer shadow-xs hover:bg-stone-50"
-                      >
-                        {uploadingImage ? 'Uploading image...' : 'Upload Image Photo'}
-                      </button>
-                      <span className="text-[11px] text-stone-500 mt-2 font-light">
-                        Select a JPG, PNG, or WEBP file from your device
-                      </span>
-                    </div>
-                  )}
+
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploadingImage}
+                      className="bg-white border border-[#D5C7BB] hover:border-[#965438] text-stone-800 text-xs px-5 py-2 font-medium uppercase tracking-wider transition cursor-pointer shadow-xs hover:bg-stone-50 disabled:opacity-50"
+                    >
+                      {uploadingImage ? (uploadProgress || 'Uploading...') : 'Upload Photos & Videos'}
+                    </button>
+
+                    <span className="text-[11px] text-stone-500 mt-2 font-light">
+                      Select multiple photos (JPG, PNG, WEBP) or videos (MP4, MOV, WEBM)
+                    </span>
+                    <span className="text-[10px] text-stone-400 mt-0.5">
+                      Uploaded directly to Supabase Storage (<code className="font-mono text-stone-600">Products</code> bucket)
+                    </span>
+                  </div>
 
                   <input
                     ref={fileInputRef}
                     type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
+                    multiple
+                    accept="image/*,video/*"
+                    onChange={handleFileUpload}
                     className="hidden"
                   />
                 </div>
 
-                <div className="mt-2 flex items-center gap-2">
-                  <span className="text-[10px] uppercase tracking-wider text-stone-500 whitespace-nowrap">Or Image URL:</span>
+                {/* Add Asset by URL */}
+                <div className="mt-2.5 p-2.5 bg-stone-50 border border-[#E0D5C7] flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <span className="text-[10px] uppercase tracking-wider text-stone-600 font-medium">Or URL:</span>
+                    <select
+                      value={customMediaType}
+                      onChange={(e) => setCustomMediaType(e.target.value as 'image' | 'video')}
+                      className="border border-[#D5C7BB] bg-white px-2 py-1 text-xs focus:outline-none focus:border-[#965438]"
+                    >
+                      <option value="image">Photo URL</option>
+                      <option value="video">Video URL</option>
+                    </select>
+                  </div>
                   <input
                     type="url"
-                    placeholder="https://... or /static/products/..."
-                    value={newProd.image_url}
-                    onChange={(e) => {
-                      setNewProd({ ...newProd, image_url: e.target.value });
-                      setUploadPreview(e.target.value);
+                    placeholder={customMediaType === 'image' ? "https://... or Supabase image URL" : "https://... or Supabase video MP4 URL"}
+                    value={customMediaUrl}
+                    onChange={(e) => setCustomMediaUrl(e.target.value)}
+                    className="flex-1 border border-[#D5C7BB] bg-white px-2.5 py-1 text-xs font-mono focus:outline-none focus:border-[#965438]"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddMediaUrl();
+                      }
                     }}
-                    className="flex-1 border border-[#D5C7BB] px-2.5 py-1.5 text-xs font-mono focus:outline-none focus:border-[#965438]"
                   />
+                  <button
+                    type="button"
+                    onClick={handleAddMediaUrl}
+                    disabled={!customMediaUrl.trim()}
+                    className="bg-stone-800 text-white text-xs px-3 py-1 font-medium hover:bg-stone-900 disabled:opacity-50 cursor-pointer transition shrink-0"
+                  >
+                    Add Asset
+                  </button>
                 </div>
+
+                {/* Media Gallery / Reordering / Cover Selector */}
+                {mediaList.length > 0 && (
+                  <div className="mt-3.5 space-y-2">
+                    <div className="text-[11px] font-medium tracking-wider uppercase text-stone-600 flex items-center justify-between">
+                      <span>Attached Media Gallery ({mediaList.length})</span>
+                      <span className="text-[10px] text-stone-400 font-normal">First / marked item is used as primary listing cover</span>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                      {mediaList.map((item, idx) => (
+                        <div
+                          key={idx}
+                          className={`relative border bg-white p-1.5 transition-all flex flex-col ${
+                            item.is_primary 
+                              ? 'border-[#965438] ring-2 ring-[#965438]/20 shadow-xs' 
+                              : 'border-[#D5C7BB] hover:border-stone-400'
+                          }`}
+                        >
+                          {/* Preview container */}
+                          <div className="relative aspect-[3/4] bg-stone-100 overflow-hidden mb-1.5 flex items-center justify-center">
+                            {item.media_type === 'video' ? (
+                              <div className="relative w-full h-full flex items-center justify-center bg-stone-900">
+                                <video
+                                  src={getImageUrl(item.image_url)}
+                                  className="w-full h-full object-cover opacity-80"
+                                  muted
+                                  playsInline
+                                />
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                  <span className="w-7 h-7 rounded-full bg-white/90 flex items-center justify-center text-stone-900 shadow-sm">
+                                    <Video className="w-3.5 h-3.5" />
+                                  </span>
+                                </div>
+                                <span className="absolute top-1 right-1 bg-black/75 text-white text-[8px] font-mono uppercase px-1.5 py-0.5 rounded-xs tracking-wider">
+                                  VIDEO
+                                </span>
+                              </div>
+                            ) : (
+                              <img
+                                src={getImageUrl(item.image_url)}
+                                alt={`Asset ${idx + 1}`}
+                                className="w-full h-full object-cover"
+                              />
+                            )}
+
+                            {/* Cover Badge */}
+                            {item.is_primary && (
+                              <span className="absolute top-1 left-1 bg-[#965438] text-white text-[8px] font-mono uppercase px-1.5 py-0.5 tracking-wider font-semibold shadow-xs">
+                                ★ COVER
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Filename / URL */}
+                          <div className="px-1 text-[10px] font-mono text-stone-500 truncate mb-1.5" title={item.image_url}>
+                            {item.image_url.split('/').pop()}
+                          </div>
+
+                          {/* Actions */}
+                          <div className="mt-auto pt-1.5 border-t border-stone-100 flex items-center justify-between text-[11px]">
+                            {item.is_primary ? (
+                              <span className="text-[#965438] font-medium text-[10px] uppercase tracking-wider flex items-center gap-1">
+                                <Check className="w-3 h-3" /> Cover
+                              </span>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => handleSetPrimaryMedia(idx)}
+                                className="text-stone-600 hover:text-[#965438] text-[10px] uppercase tracking-wider font-medium cursor-pointer"
+                              >
+                                Set Cover
+                              </button>
+                            )}
+
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveMedia(idx)}
+                              className="text-stone-400 hover:text-red-600 p-1 cursor-pointer transition"
+                              title="Remove asset"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div>
