@@ -5,7 +5,6 @@ import time
 from pathlib import Path
 from fastapi import HTTPException, UploadFile
 from supabase import Client, create_client
-import supabase
 
 SUPABASE_URL = os.getenv("SUPABASE_URL", "https://vujpzldubtgaikeawidk.supabase.co")
 SUPABASE_SERVICE_ROLE_KEY = (
