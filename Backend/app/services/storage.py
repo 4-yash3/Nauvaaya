@@ -5,6 +5,7 @@ import time
 from pathlib import Path
 from fastapi import HTTPException, UploadFile
 from supabase import Client, create_client
+import supabase
 
 SUPABASE_URL = os.getenv("SUPABASE_URL", "https://vujpzldubtgaikeawidk.supabase.co")
 SUPABASE_SERVICE_ROLE_KEY = (
@@ -111,4 +112,17 @@ async def upload_bytes_to_supabase(
             status_code=500,
             detail=f"Failed to upload bytes to Supabase Storage: {str(e)}"
         )
+
+def delete_file_from_supabase(image_url: str):
+    """Extract relative path and remove file from Supabase 'Products' storage bucket."""
+    if not image_url:
+        return
+    try:
+        # Example URL: https://<project>.supabase.co/storage/v1/object/public/Products/products/123_shirt.png
+        # The storage client expects the path inside the bucket: 'products/123_shirt.png'
+        if "/public/Products/" in image_url:
+            file_path = image_url.split("/public/Products/")[-1]
+            supabase.storage.from_("Products").remove([file_path])
+    except Exception as e:
+        print(f"Warning: Failed to delete image from Supabase storage ({image_url}): {e}")
 

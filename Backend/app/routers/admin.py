@@ -22,7 +22,11 @@ from app.schemas import (
     ProductCreateIn,
     StockUpdateIn,
 )
-from app.services.storage import upload_bytes_to_supabase, upload_file_to_supabase
+from app.services.storage import (
+    delete_file_from_supabase,
+    upload_bytes_to_supabase,
+    upload_file_to_supabase,
+)
 
 router = APIRouter(prefix="/api/v1/admin", tags=["Admin"])
 
@@ -216,20 +220,32 @@ async def admin_delete_product(
     product_id: UUID,
     db: AsyncSession = Depends(get_db)
 ):
-    """Safely archive or delete a piece from the catalog."""
-    stmt = select(Product).where(Product.id == product_id)
+    """Safely archive or delete a piece from the catalog and purge Supabase storage."""
+    stmt = (
+        select(Product)
+        .options(selectinload(Product.images))
+        .where(Product.id == product_id)
+    )
     res = await db.execute(stmt)
     product = res.scalar_one_or_none()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
 
+    # Collect image URLs before database deletion
+    image_urls = [img.image_url for img in product.images if img.image_url]
+
     try:
         await db.delete(product)
         await db.commit()
-        return {"message": "Product removed successfully", "product_id": str(product_id)}
+
+        # Delete from Supabase Storage once database deletion succeeds
+        for url in image_urls:
+            delete_file_from_supabase(url)
+
+        return {"message": "Product and associated media removed successfully", "product_id": str(product_id)}
     except Exception:
         await db.rollback()
-        # Soft delete if linked to historical order items
+        # Fallback to soft delete if linked to historical order items
         ref_stmt = select(Product).where(Product.id == product_id)
         ref_res = await db.execute(ref_stmt)
         p = ref_res.scalar_one()
