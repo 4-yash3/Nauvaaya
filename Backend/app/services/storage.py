@@ -3,6 +3,7 @@ import os
 import re
 import time
 from pathlib import Path
+from urllib.parse import unquote
 from fastapi import HTTPException, UploadFile
 from supabase import Client, create_client
 
@@ -37,7 +38,7 @@ def get_supabase_client() -> Client:
 
 async def upload_file_to_supabase(file: UploadFile, folder: str = "products") -> str:
     """
-    Upload an UploadFile to the Supabase Storage bucket 'Products' under {folder}/{timestamp}_{filename}.
+    Upload an UploadFile to the Supabase Storage bucket 'Products' under {folder}/{timestamp}_{clean_filename}.
     Returns the permanent public URL.
     """
     try:
@@ -112,16 +113,26 @@ async def upload_bytes_to_supabase(
             detail=f"Failed to upload bytes to Supabase Storage: {str(e)}"
         )
 
+
 def delete_file_from_supabase(image_url: str):
-    """Extract relative path and remove file from Supabase 'Products' storage bucket."""
+    """
+    Extracts relative bucket path from the public URL and deletes the file
+    from the Supabase Storage 'Products' bucket.
+    """
     if not image_url:
         return
     try:
-        # Example URL: https://<project>.supabase.co/storage/v1/object/public/Products/products/123_shirt.png
-        # The storage client expects the path inside the bucket: 'products/123_shirt.png'
-        if "/public/Products/" in image_url:
-            file_path = image_url.split("/public/Products/")[-1]
-            supabase.storage.from_("Products").remove([file_path])
+        marker = "/public/Products/"
+        if marker.lower() in image_url.lower():
+            idx = image_url.lower().index(marker.lower())
+            raw_path = image_url[idx + len(marker):]
+            # Strip query strings, decode %20, and trim leading slashes
+            clean_path = unquote(raw_path.split("?")[0]).lstrip("/")
+
+            client = get_supabase_client()
+            res = client.storage.from_("Products").remove([clean_path])
+            print(f"[STORAGE CLEANUP] Removed '{clean_path}' from Products: {res}")
+        else:
+            print(f"[STORAGE CLEANUP] Marker '{marker}' not found in URL: {image_url}")
     except Exception as e:
         print(f"Warning: Failed to delete image from Supabase storage ({image_url}): {e}")
-
